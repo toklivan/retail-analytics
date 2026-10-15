@@ -10,7 +10,7 @@ Légende : **Livré** · **En cours** · **Prévu**
 
 Source : les exports de la caisse.
 
-### v0.1.0 : les fondations (En cours)
+### v0.1.0 : les fondations (Livré)
 
 > Mes données de caisse sont-elles exploitables ?
 

@@ -2,7 +2,7 @@
 
 Un outil d'analyse et de pilotage pour un commerce d'alimentation de proximité. Il part des données que le commerce produit déjà (les ventes de la caisse, les factures des fournisseurs, le relevé bancaire) et les transforme en réponses concrètes : quels rayons font la marge, quand un fournisseur augmente ses prix, ce qui va manquer en rayon, ce que le mois a réellement rapporté.
 
-**État : en construction.** La première version (v0.1.0) est en cours. Ce qui fonctionne déjà est listé dans [État actuel](#état-actuel). Le reste est décrit dans la [feuille de route](ROADMAP.md).
+**État : en construction.** La première version (v0.1.0) est livrée. Ce qui fonctionne déjà est listé dans [État actuel](#état-actuel). Le reste est décrit dans la [feuille de route](ROADMAP.md).
 
 ## Pourquoi ce projet
 
@@ -47,7 +47,7 @@ Chaque version est livrable, testée et taguée. Le détail version par version 
 
 ## État actuel
 
-Version en cours : **v0.1.0, les fondations**.
+Dernière version livrée : **v0.1.0, les fondations**.
 
 - [x] Générateur de données fictives : ventes et journées de caisse de janvier à mi-octobre 2026, au format des exports de la caisse et avec leurs défauts
 - [x] Lecture et nettoyage des ventes : doublons entre exports retirés, articles offerts repérés, tickets d'après minuit rattachés à leur journée de caisse
