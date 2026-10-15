@@ -1,0 +1,5 @@
+"Store";"Store ID";"Opening Date";"Closing Date";"Order ID";"Currency";"Custom Order ID";"Order Name";"Opened by Seller";"Closed on Table";"# Customers";"Order Duration";"Order Status";"Sales incl Tax";"Sales excl Tax";"Total Tax Amount";"Total Payments"
+"Épicerie Exemple";"10000";"2026-03-02 09:58:30";"2026-03-02 10:00:00";"T1";"EUR";"";"A1";"Caisse 1";"";"1";"00:01:30";"CLOSE";"3,50";"3,32";"0,18";"3,50"
+"Épicerie Exemple";"10000";"2026-03-02 18:29:00";"2026-03-02 18:30:00";"T2";"EUR";"";"A2";"Caisse 1";"";"1";"00:01:00";"CLOSE";"4,80";"4,00";"0,80";"4,80"
+"Épicerie Exemple";"10000";"2026-03-02 20:59:00";"2026-03-02 21:00:00";"T3";"EUR";"";"A3";"Caisse 1";"";"1";"00:01:00";"CLOSE";"0,00";"0,00";"0,00";"0,00"
+"Épicerie Exemple";"10000";"2026-03-03 00:09:00";"2026-03-03 00:10:00";"T4";"EUR";"";"A4";"Caisse 1";"";"1";"00:01:00";"CLOSE";"2,00";"1,67";"0,33";"2,00"

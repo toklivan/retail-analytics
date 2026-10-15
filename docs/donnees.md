@@ -485,7 +485,6 @@ Prix de vente suggéré pour un taux de marque cible : prix HT = coût HT / (1 �
 
 ## 12. Simplifications connues
 
-- Les montants sont manipulés en nombres décimaux (`float`). Une version comptable travaillerait en centimes entiers ou avec `Decimal` pour éviter les erreurs d'arrondi.
 - Le taux de TVA d'un produit est déduit de ses ventes. Un produit vendu une seule fois pour quelques centimes peut être mal classé ; le contrôle par les totaux d'Accounting le signale.
 - Les remises globales d'un ticket de caisse sont réparties au prorata des lignes, faute de savoir à quel article elles s'appliquent.
 - La reconstitution d'une période passée attribue les pertes à la fin de la période, faute de connaître leur date. Le coût des ventes du début de période dépend d'un stock de départ estimé.
