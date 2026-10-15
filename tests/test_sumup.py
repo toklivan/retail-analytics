@@ -23,9 +23,9 @@ def test_lit_les_quatre_tables(export):
 
 def test_traduit_les_colonnes(export):
     assert list(export["ventes"].columns) == ["id_ticket", "date_heure", "libelle", "quantite",
-                                              "prix_unitaire_ttc", "montant_ttc", "montant_ht"]
+                                              "prix_unitaire_ttc", "montant_ttc", "montant_ht", "export"]
     assert list(export["journees"].columns) == ["id_journee", "ouverture", "fermeture", "nombre_tickets",
-                                                "ca_ttc", "ca_ht", "remises_ttc"]
+                                                "ca_ttc", "ca_ht", "remises_ttc", "export"]
 
 
 def test_convertit_montants_quantites_et_dates(export):
@@ -76,3 +76,4 @@ def test_met_bout_a_bout_plusieurs_exports(tmp_path):
         (tmp_path / f"orders-report-products-{periode}.csv").write_bytes(source.read_bytes())
     brut = sumup.lire_fichiers(tmp_path, "orders-report-products")
     assert len(brut) == 10
+    assert sorted(brut["export"].unique()) == ["2026-03-01_2026-03-02", "2026-03-02_2026-03-03"]

@@ -130,7 +130,7 @@ Ces égalités deviennent des garde-fous du nettoyage : si l'une d'elles casse, 
 
 ## 5. Le modèle de données cible
 
-Le modèle complet est défini dès le départ, mais chaque table n'est construite que dans la version qui en a besoin. Les noms sont en français et en `snake_case`.
+Le modèle complet est défini dès le départ, mais chaque table n'est construite que dans la version qui en a besoin. Les noms sont en français et en `snake_case`. Les montants sont en centimes entiers (12,40 € s'écrit 1240), pour que les contrôles au centime soient exacts ; ils ne sont convertis en euros qu'à l'affichage.
 
 ### `ventes` (v0.1) : une ligne par article d'un ticket
 

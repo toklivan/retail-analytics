@@ -61,11 +61,15 @@ def verifier_lisible(texte, nombres):
 
 
 def traduire(brut, colonnes):
-    """Garde les colonnes utiles et leur donne leur nom interne. Signale celles qui manquent."""
+    """Garde les colonnes utiles et leur donne leur nom interne. Signale celles qui manquent.
+
+    La colonne `export`, ajoutée à la lecture, est conservée telle quelle.
+    """
     manquantes = [c for c in colonnes if c not in brut.columns]
     if manquantes:
         raise ValueError(f"Colonnes absentes de l'export : {manquantes}")
-    return brut[list(colonnes)].rename(columns=colonnes)
+    garder = list(colonnes) + (["export"] if "export" in brut.columns else [])
+    return brut[garder].rename(columns=colonnes)
 
 
 def preparer_ventes(brut):
@@ -104,13 +108,21 @@ def preparer_journees(brut):
 # --- Lecture des fichiers ---------------------------------------------------
 
 def lire_fichiers(dossier, prefixe):
-    """Lit et met bout à bout tous les fichiers d'un même type (un par export mensuel)."""
+    """Lit et met bout à bout tous les fichiers d'un même type (un par export mensuel).
+
+    Chaque ligne garde dans la colonne `export` la période de son fichier
+    (`2026-01-31_2026-02-28`) : le nettoyage s'en sert pour retirer les doublons.
+    """
     chemins = sorted(Path(dossier).glob(f"{prefixe}-*.csv"))
     if not chemins:
         raise FileNotFoundError(f"Aucun fichier {prefixe}-*.csv dans {dossier}")
-    # dtype=str : pandas lit tout en texte, sans deviner les types ; la conversion
-    # est faite ensuite, colonne par colonne, avec vérification.
-    tables = [pd.read_csv(chemin, sep=";", dtype=str, encoding="utf-8") for chemin in chemins]
+    tables = []
+    for chemin in chemins:
+        # dtype=str : pandas lit tout en texte, sans deviner les types ; la conversion
+        # est faite ensuite, colonne par colonne, avec vérification.
+        table = pd.read_csv(chemin, sep=";", dtype=str, encoding="utf-8")
+        table["export"] = chemin.stem.removeprefix(f"{prefixe}-")
+        tables.append(table)
     return pd.concat(tables, ignore_index=True)
 
 
