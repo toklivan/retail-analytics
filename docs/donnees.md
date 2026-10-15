@@ -423,7 +423,7 @@ Quelle que soit la voie d'entrée :
 
 Le générateur produit les mêmes fichiers que les exports réels, au même format, avec un nom de magasin et un identifiant inventés. En v0.1 : `Orders` (products, totals, payments) et `Drawers` (totals). Puis un inventaire en v0.5 et des achats en v0.6 : des images de factures et de tickets fictifs avec la lecture attendue, des factures électroniques et des exports de fournisseurs. Il doit produire des données qu'on a envie d'analyser.
 
-En v0.1 : un magasin fictif (« Épicerie Exemple »), du 1er janvier au 14 octobre 2026, octobre étant volontairement incomplet. Un export par mois, comme on les télécharge depuis le back-office, chacun reprenant le dernier jour du mois précédent pour produire des doublons à retirer. Environ 150 produits sur neuf rayons, plus deux touches libres.
+En v0.1 : un magasin fictif (« Épicerie Exemple »), du 1er janvier au 14 octobre 2026, octobre étant volontairement incomplet. Un export par mois, comme on les télécharge depuis le back-office, chacun reprenant le dernier jour du mois précédent pour produire des doublons à retirer. Environ 130 produits sur dix rayons, plus deux touches libres.
 
 **Les défauts relevés dans les vrais exports**
 - le format de la section 4 : point-virgule, guillemets, virgule décimale, colonnes en anglais, colonnes constantes ou vides
