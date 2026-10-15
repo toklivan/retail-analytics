@@ -4,3 +4,4 @@ data/fictif/
 .venv/
 __pycache__/
 .pytest_cache/
+ventes_propres.csv
