@@ -38,8 +38,8 @@ Chaque source a son module de lecture, appelé adaptateur. Il transforme le form
 | Générateur fictif | Mêmes fichiers que les exports de la caisse, puis inventaires et factures | v0.1 |
 | Ventes détaillées | Rapport « Orders » de la Caisse Pro SumUp | v0.1 |
 | Journées de caisse | Rapport « Drawers » | v0.1 |
-| Totaux par journée et par taux de TVA | Rapport « Accounting » | Contrôle dès v0.1 |
-| Ventes par produit | Rapport « Product Sales » | Contrôle dès v0.1 |
+| Totaux par journée et par taux de TVA | Rapport « Accounting » | Contrôle, non lu en v0.1 |
+| Ventes par produit | Rapport « Product Sales » | Contrôle, non lu en v0.1 |
 | Inventaire | Fichier de comptage (section 6) | v0.5 |
 | Achats | Photo ou scan des factures et tickets, PDF, facture électronique, export fournisseur, saisie manuelle en dernier recours (section 8) | v0.6 |
 | Mouvements d'espèces | Rapport « Cashbook » | v0.10 |
@@ -490,3 +490,5 @@ Prix de vente suggéré pour un taux de marque cible : prix HT = coût HT / (1 �
 - La reconstitution d'une période passée attribue les pertes à la fin de la période, faute de connaître leur date. Le coût des ventes du début de période dépend d'un stock de départ estimé.
 - PEPS suppose qu'on vend d'abord le plus ancien. Si un rayon est mal tourné, le coût calculé et le coût physique peuvent légèrement différer ; l'inventaire corrige les quantités, pas l'ordre réel des sorties.
 - Avant la v0.7, aucune marge n'est calculée sur les données réelles : seul le chiffre d'affaires est fiable.
+- En v0.1, les rapports Accounting et Product Sales ne sont ni générés ni lus : les contrôles qui s'appuient sur eux (totaux par taux de TVA, ventes par produit) ne sont pas encore faits. Les contrôles entre Orders et Drawers couvrent déjà les lignes, les tickets, les paiements et les journées.
+- En v0.1, le taux de TVA de chaque produit n'est pas encore déduit des ventes : la table `produits` se limite au libellé et au rayon.
