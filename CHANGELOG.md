@@ -4,6 +4,8 @@ Toutes les évolutions notables du projet sont consignées ici. Les numéros de 
 
 ## [Non publié]
 
+## [0.1.0] - 2026-10-15
+
 ### Ajouté
 
 - Feuille de route du projet
