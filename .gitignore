@@ -1,0 +1,6 @@
+data/raw/
+data/fictif/
+.env
+.venv/
+__pycache__/
+.pytest_cache/
