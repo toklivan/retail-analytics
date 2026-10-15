@@ -49,7 +49,7 @@ Chaque version est livrable, testée et taguée. Le détail version par version 
 
 Version en cours : **v0.1.0, les fondations**.
 
-- [ ] Générateur de données fictives (ventes et journées de caisse sur douze mois)
+- [ ] Générateur de données fictives (ventes et journées de caisse de janvier à mi-octobre 2026)
 - [ ] Lecture et nettoyage des ventes, avec contrôles de cohérence
 - [ ] Rattachement de chaque produit à un rayon
 - [ ] Tests automatisés et intégration continue
