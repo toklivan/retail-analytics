@@ -49,14 +49,49 @@ Chaque version est livrable, testée et taguée. Le détail version par version 
 
 Version en cours : **v0.1.0, les fondations**.
 
-- [ ] Générateur de données fictives (ventes et journées de caisse sur douze mois)
-- [ ] Lecture et nettoyage des ventes, avec contrôles de cohérence
-- [ ] Rattachement de chaque produit à un rayon
-- [ ] Tests automatisés et intégration continue
+- [x] Générateur de données fictives : ventes et journées de caisse de janvier à mi-octobre 2026, au format des exports de la caisse et avec leurs défauts
+- [x] Lecture et nettoyage des ventes : doublons entre exports retirés, articles offerts repérés, tickets d'après minuit rattachés à leur journée de caisse
+- [x] Contrôles de cohérence au centime entre les lignes, les tickets, les paiements et les journées de caisse
+- [x] Rattachement de chaque produit à un rayon, avec la liste des libellés inconnus et la part du chiffre d'affaires non rattachée
+- [x] Tests automatisés, dont un test qui vérifie que l'outil retrouve les défauts cachés dans le jeu fictif, et intégration continue
+
+### Installation
+
+Avec Python 3.14 :
+
+```
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+### Utilisation
+
+Générer le jeu fictif dans `data/fictif/` :
+
+```
+python -m retail_analytics generer
+```
+
+Produire le fichier des ventes propres et catégorisées, avec un résumé et le résultat des contrôles :
+
+```
+python -m retail_analytics nettoyer
+```
+
+Le fichier `ventes_propres.csv` est écrit à côté des exports. Les montants y sont en centimes.
+
+Sur le jeu complet, un seul contrôle signale un écart : la dernière journée de caisse se termine après minuit, après la fin de l'export. C'est voulu : l'outil le signale au lieu de l'ignorer.
+
+Lancer les tests :
+
+```
+python -m pytest
+```
 
 ## Données
 
-Les données réelles d'un commerce ne sont jamais publiées. Le dépôt utilise uniquement un jeu de données fictif, produit par un script qui reproduit la structure d'un vrai export de caisse, ses défauts et les phénomènes du métier : saisonnalité, heures de pointe, promotions, hausses de prix fournisseurs. Les produits, prix et quantités sont inventés.
+Les données réelles d'un commerce ne sont jamais publiées. Le dépôt utilise uniquement un jeu de données fictif, produit par un script qui reproduit la structure d'un vrai export de caisse, ses défauts et les phénomènes du métier : saisonnalité par rayon, heures de pointe, jours plus chargés que d'autres. Les promotions et les hausses de prix fournisseurs arriveront avec les achats (v0.6). Les produits, prix et quantités sont inventés.
 
 La stratégie complète est décrite dans [docs/donnees.md](docs/donnees.md).
 

@@ -1,0 +1,6 @@
+"Store";"Store ID";"Opening Date";"Closing Date";"Order ID";"Currency";"Product";"SKU";"Quantity";"Gift card code";"Price incl Tax";"Discount";"Sales incl Tax";"Sales excl Tax";"Tax Amount"
+"Épicerie Exemple";"10000";"2026-03-02 09:58:30";"2026-03-02 10:00:00";"T1";"EUR";"Baguette";"";"2";"";"1,10";"0,00";"2,20";"2,09";"0,11"
+"Épicerie Exemple";"10000";"2026-03-02 09:58:30";"2026-03-02 10:00:00";"T1";"EUR";"Cola 33cl";"";"1";"";"1,30";"0,00";"1,30";"1,23";"0,07"
+"Épicerie Exemple";"10000";"2026-03-02 18:29:00";"2026-03-02 18:30:00";"T2";"EUR";"Bière blonde 33cl";"";"3";"";"1,60";"0,00";"4,80";"4,00";"0,80"
+"Épicerie Exemple";"10000";"2026-03-02 20:59:00";"2026-03-02 21:00:00";"T3";"EUR";"Chips nature 150g";"";"1";"";"1,90";"0,00";"0,00";"0,00";"0,00"
+"Épicerie Exemple";"10000";"2026-03-03 00:09:00";"2026-03-03 00:10:00";"T4";"EUR";"Produit mystère";"";"1";"";"2,00";"0,00";"2,00";"1,67";"0,33"

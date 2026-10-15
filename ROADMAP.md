@@ -15,7 +15,7 @@ Source : les exports de la caisse.
 > Mes données de caisse sont-elles exploitables ?
 
 - Modèle de données documenté pour l'ensemble du projet ([docs/donnees.md](docs/donnees.md))
-- Générateur de données fictives : ventes et journées de caisse sur douze mois, au format exact des exports et avec leurs défauts
+- Générateur de données fictives : ventes et journées de caisse de janvier à mi-octobre 2026, au format exact des exports et avec leurs défauts
 - Lecture et nettoyage des ventes : colonnes traduites, montants convertis, articles offerts repérés, rattachement de chaque ticket à sa journée de caisse
 - Contrôles de cohérence : lignes, total du ticket, paiements et totaux de la journée doivent concorder au centime
 - Rattachement de chaque produit à un rayon par une table de correspondance

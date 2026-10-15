@@ -1,0 +1,4 @@
+# Configuration de pytest : les tests trouvent le paquet depuis la racine du dépôt.
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

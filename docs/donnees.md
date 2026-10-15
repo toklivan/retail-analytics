@@ -38,8 +38,8 @@ Chaque source a son module de lecture, appelé adaptateur. Il transforme le form
 | Générateur fictif | Mêmes fichiers que les exports de la caisse, puis inventaires et factures | v0.1 |
 | Ventes détaillées | Rapport « Orders » de la Caisse Pro SumUp | v0.1 |
 | Journées de caisse | Rapport « Drawers » | v0.1 |
-| Totaux par journée et par taux de TVA | Rapport « Accounting » | Contrôle dès v0.1 |
-| Ventes par produit | Rapport « Product Sales » | Contrôle dès v0.1 |
+| Totaux par journée et par taux de TVA | Rapport « Accounting » | Contrôle, non lu en v0.1 |
+| Ventes par produit | Rapport « Product Sales » | Contrôle, non lu en v0.1 |
 | Inventaire | Fichier de comptage (section 6) | v0.5 |
 | Achats | Photo ou scan des factures et tickets, PDF, facture électronique, export fournisseur, saisie manuelle en dernier recours (section 8) | v0.6 |
 | Mouvements d'espèces | Rapport « Cashbook » | v0.10 |
@@ -54,10 +54,12 @@ La structure de chaque export a été relevée sur une journée réelle. Aucune 
 
 ### Format commun
 
-- Séparateur point-virgule, toutes les valeurs entre guillemets, encodage UTF-8.
+- Séparateur point-virgule, toutes les valeurs entre guillemets, encodage UTF-8 sans BOM, fins de ligne Windows (CRLF), pas de retour à la ligne après la dernière ligne.
 - Noms de colonnes en anglais (`Closing Date`, `Sales incl Tax`…), traduits à la lecture.
 - Montants en texte avec virgule décimale (`"12,40"`), sans symbole €.
 - Dates au format `AAAA-MM-JJ HH:MM:SS`, ou `AAAA-MM-JJ` pour les rapports par journée.
+- Taux de TVA écrits en fraction (`0,055`, `0,10`, `0,20`), pas en pourcentage.
+- Le nom du fichier porte la période exportée : `orders-report-products-AAAA-MM-JJ_AAAA-MM-JJ.csv`.
 - Des colonnes constantes (nom et identifiant du magasin, devise) retirées dès la lecture.
 - Chaque rapport se décline en plusieurs fichiers : totaux, paiements, TVA, remboursements, annulations, dépenses, compte client, transferts entre moyens de paiement. Les fichiers vides gardent leur ligne d'en-tête.
 
@@ -72,11 +74,13 @@ La structure de chaque export a été relevée sur une journée réelle. Aucune 
 | `refunded-products` | Article remboursé | Retours, format à confirmer sur un jour avec remboursement |
 | `canceled` | Article annulé | Exclu du chiffre d'affaires, compté et signalé |
 
-Les fichiers sont reliés par `Order ID`, identifiant unique du ticket. L'heure de la vente est la date de clôture du ticket. Les montants HT et de TVA sont fournis ligne par ligne : on les lit, on ne les recalcule pas.
+Les fichiers sont reliés par `Order ID`, identifiant unique du ticket. L'heure de la vente est la date de clôture du ticket. Un ticket porte aussi sa date d'ouverture, et sa durée (`Order Duration`) est l'écart entre les deux. Le statut (`Order Status`) vaut toujours `CLOSE`. Les quantités sont des entiers, et un même libellé n'apparaît qu'une fois par ticket. Les montants HT et de TVA sont fournis ligne par ligne : on les lit, on ne les recalcule pas.
 
 ### « Drawers » : les journées de caisse
 
 Une ligne par ouverture de caisse, avec sa date d'ouverture, sa date de fermeture et un identifiant. Un ticket appartient à la journée de caisse pendant laquelle il a été clos. C'est ce qui définit la `journee_commerciale`.
+
+Le rapport ne contient que les caisses **ouvertes** pendant la période exportée. Les tickets d'après minuit du premier jour exporté appartiennent à la caisse de la veille, absente du fichier : il faut lire plusieurs exports ensemble, et un ticket sans journée de caisse est signalé, jamais rattaché par supposition. Le nombre de tickets (`# Orders`) compte aussi les tickets à 0 €.
 
 ### « Product Sales » : les ventes par produit
 
@@ -86,7 +90,7 @@ Une ligne par produit vendu sur la période : quantité, prix d'achat, ventes TT
 
 ### « Accounting » : les totaux comptables
 
-Totaux par journée commerciale : chiffre d'affaires TTC et HT, remises, remboursements, paiements par moyen, ventilation par taux de TVA. La date indiquée est celle de la journée commerciale, pas du calendrier.
+Totaux par journée commerciale : chiffre d'affaires TTC et HT, remises, remboursements, paiements par moyen, ventilation par taux de TVA. La date indiquée est celle de la journée commerciale, pas du calendrier. Le total des remises y est à zéro alors que la journée de caisse en contient : le contrôle des articles offerts se fait contre Drawers.
 
 ### « Cashbook » : le livre de caisse
 
@@ -106,8 +110,10 @@ Chaque entrée et sortie d'espèces, avec le solde du tiroir après l'opération
 - **Des articles offerts.** Certains tickets sont soldés à 0 € par une remise totale : les articles ont un prix catalogue, un montant encaissé nul, et aucun paiement. Leur valeur se retrouve dans le total des remises de la journée de caisse. Ils sont exclus du chiffre d'affaires mais sortent bien du stock.
 - **Des touches génériques** : un produit vendu par famille ou à l'unité, sans code-barres. Elles passent par la table de correspondance.
 - **Des paiements en plusieurs fois** : une partie en carte, le reste en espèces. Le moyen de paiement appartient au ticket, pas à l'article.
+- **Les moyens de paiement changent d'écriture selon le rapport** : `Cash` et `Card` dans Orders, `CASH` et `CARD` dans Drawers et Accounting.
 - **Une plateforme de livraison** apparaît comme moyen de paiement. Ces ventes portent une commission et doivent être distinguées des ventes en magasin.
-- **Des lignes en double** dans le fichier des totaux d'Accounting. Le nettoyage dédoublonne avant tout calcul.
+- **Des lignes en double** dans le fichier des totaux d'Accounting. Le nettoyage dédoublonne avant tout calcul. Le même risque existe quand deux exports se chevauchent : un ticket présent dans deux fichiers n'est compté qu'une fois, grâce à son `Order ID`.
+- **Des prix d'achat à zéro et des marges négatives** dans Product Sales, preuve supplémentaire que ce coût n'est pas fiable.
 - **La remise n'apparaît pas ligne par ligne** dans Orders (colonne à zéro) alors que la journée de caisse en totalise. Les remises se repèrent par l'écart entre prix catalogue et montant encaissé.
 
 ### Les contrôles qui tiennent
@@ -117,13 +123,14 @@ Sur la journée étudiée, au centime près :
 - la somme des paiements d'un ticket est égale au total du ticket ;
 - la somme HT des lignes est égale à celle du fichier de TVA et à celle de Product Sales ;
 - la valeur catalogue des articles offerts est égale aux remises de la journée de caisse ;
+- le nombre de tickets, le CA TTC et le CA HT de la journée de caisse sont égaux à ceux des tickets clos pendant son ouverture ;
 - les totaux par taux de TVA de la journée de caisse sont égaux à ceux d'Accounting.
 
 Ces égalités deviennent des garde-fous du nettoyage : si l'une d'elles casse, le programme le dit au lieu de produire des chiffres faux.
 
 ## 5. Le modèle de données cible
 
-Le modèle complet est défini dès le départ, mais chaque table n'est construite que dans la version qui en a besoin. Les noms sont en français et en `snake_case`.
+Le modèle complet est défini dès le départ, mais chaque table n'est construite que dans la version qui en a besoin. Les noms sont en français et en `snake_case`. Les montants sont en centimes entiers (12,40 € s'écrit 1240), pour que les contrôles au centime soient exacts ; ils ne sont convertis en euros qu'à l'affichage.
 
 ### `ventes` (v0.1) : une ligne par article d'un ticket
 
@@ -416,6 +423,8 @@ Quelle que soit la voie d'entrée :
 
 Le générateur produit les mêmes fichiers que les exports réels, au même format, avec un nom de magasin et un identifiant inventés. En v0.1 : `Orders` (products, totals, payments) et `Drawers` (totals). Puis un inventaire en v0.5 et des achats en v0.6 : des images de factures et de tickets fictifs avec la lecture attendue, des factures électroniques et des exports de fournisseurs. Il doit produire des données qu'on a envie d'analyser.
 
+En v0.1 : un magasin fictif (« Épicerie Exemple »), du 1er janvier au 14 octobre 2026, octobre étant volontairement incomplet. Un export par mois, comme on les télécharge depuis le back-office, chacun reprenant le dernier jour du mois précédent pour produire des doublons à retirer. Environ 130 produits sur dix rayons, plus deux touches libres.
+
 **Les défauts relevés dans les vrais exports**
 - le format de la section 4 : point-virgule, guillemets, virgule décimale, colonnes en anglais, colonnes constantes ou vides
 - des tickets après minuit rattachés à la journée de la veille, avec une numérotation qui se chevauche
@@ -476,9 +485,10 @@ Prix de vente suggéré pour un taux de marque cible : prix HT = coût HT / (1 �
 
 ## 12. Simplifications connues
 
-- Les montants sont manipulés en nombres décimaux (`float`). Une version comptable travaillerait en centimes entiers ou avec `Decimal` pour éviter les erreurs d'arrondi.
 - Le taux de TVA d'un produit est déduit de ses ventes. Un produit vendu une seule fois pour quelques centimes peut être mal classé ; le contrôle par les totaux d'Accounting le signale.
 - Les remises globales d'un ticket de caisse sont réparties au prorata des lignes, faute de savoir à quel article elles s'appliquent.
 - La reconstitution d'une période passée attribue les pertes à la fin de la période, faute de connaître leur date. Le coût des ventes du début de période dépend d'un stock de départ estimé.
 - PEPS suppose qu'on vend d'abord le plus ancien. Si un rayon est mal tourné, le coût calculé et le coût physique peuvent légèrement différer ; l'inventaire corrige les quantités, pas l'ordre réel des sorties.
 - Avant la v0.7, aucune marge n'est calculée sur les données réelles : seul le chiffre d'affaires est fiable.
+- En v0.1, les rapports Accounting et Product Sales ne sont ni générés ni lus : les contrôles qui s'appuient sur eux (totaux par taux de TVA, ventes par produit) ne sont pas encore faits. Les contrôles entre Orders et Drawers couvrent déjà les lignes, les tickets, les paiements et les journées.
+- En v0.1, le taux de TVA de chaque produit n'est pas encore déduit des ventes : la table `produits` se limite au libellé et au rayon.
