@@ -30,7 +30,7 @@ ID_MAGASIN = "10000"
 VENDEUR = "Caisse 1"
 DEVISE = "EUR"
 FOND_DE_CAISSE = 15000
-CARTE, ESPECES, PLATEFORME = "Card", "Cash", "LIVRAISON_APP"
+CARTE, ESPECES, PLATEFORME = "Card", "Cash", "UBER_EATS"
 
 # Nombre moyen de tickets selon le jour de la semaine (lundi = 0).
 TICKETS_PAR_JOUR = [85, 90, 95, 95, 115, 130, 100]
