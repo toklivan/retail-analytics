@@ -24,12 +24,13 @@ Source : les exports de la caisse.
 
 Terminé quand : une commande produit un fichier de ventes propre et catégorisé à partir du jeu fictif, et les tests passent en CI.
 
-### v0.2.0 : les indicateurs de vente (Prévu)
+### v0.2.0 : les indicateurs de vente (En cours)
 
 > Qu'est-ce qui se vend vraiment ?
 
 - Chiffre d'affaires HT et quantités par rayon et par produit
 - Panier moyen, nombre de tickets, valeur des articles offerts au prix de vente
+- Ventes par moyen de paiement (espèces, carte, plateforme de livraison), panier moyen séparé pour le magasin et la livraison
 - Classement ABC des produits sur le chiffre d'affaires
 - Comparaison d'un mois sur l'autre, avec signalement des mois incomplets
 
