@@ -47,12 +47,14 @@ Chaque version est livrable, testée et taguée. Le détail version par version 
 
 ## État actuel
 
-Dernière version livrée : **v0.1.0, les fondations**.
+Dernière version livrée : **v0.2.0, les indicateurs de vente**.
 
 - [x] Générateur de données fictives : ventes et journées de caisse de janvier à mi-octobre 2026, au format des exports de la caisse et avec leurs défauts
 - [x] Lecture et nettoyage des ventes : doublons entre exports retirés, articles offerts repérés, tickets d'après minuit rattachés à leur journée de caisse
 - [x] Contrôles de cohérence au centime entre les lignes, les tickets, les paiements et les journées de caisse
 - [x] Rattachement de chaque produit à un rayon, avec la liste des libellés inconnus et la part du chiffre d'affaires non rattachée
+- [x] Indicateurs de vente par mois : chiffre d'affaires, tickets, panier moyen pour le magasin et la livraison, encaissements par moyen de paiement, articles offerts
+- [x] Détail d'un mois : chiffre d'affaires par rayon comparé au mois précédent, classement ABC des produits, mois incomplets signalés
 - [x] Tests automatisés, dont un test qui vérifie que l'outil retrouve les défauts cachés dans le jeu fictif, et intégration continue
 
 ### Installation
@@ -82,6 +84,18 @@ python -m retail_analytics nettoyer
 Le fichier `ventes_propres.csv` est écrit à côté des exports. Les montants y sont en centimes.
 
 Sur le jeu complet, un seul contrôle signale un écart : la dernière journée de caisse se termine après minuit, après la fin de l'export. C'est voulu : l'outil le signale au lieu de l'ignorer.
+
+Afficher les indicateurs de vente par mois, puis le détail du dernier mois complet :
+
+```
+python -m retail_analytics indicateurs
+```
+
+Pour détailler un autre mois, par exemple septembre 2026 :
+
+```
+python -m retail_analytics indicateurs --mois 2026-09
+```
 
 Lancer les tests :
 

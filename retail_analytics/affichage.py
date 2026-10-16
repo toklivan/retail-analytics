@@ -1,5 +1,7 @@
 """Mise en forme des nombres pour un lecteur humain, aux conventions françaises."""
 
+import pandas as pd
+
 
 def nombre(entier):
     """28578 -> '28 578'."""
@@ -21,3 +23,18 @@ def pourcentage(part):
 def date_fr(moment):
     """Date au format JJ/MM/AAAA."""
     return moment.strftime("%d/%m/%Y")
+
+
+def mois_fr(mois):
+    """Mois au format MM/AAAA ; un mois vide (ticket sans journée connue) est nommé comme tel."""
+    # pd.isna reconnaît toutes les formes de valeur manquante, dont celle d'un mois vide.
+    if pd.isna(mois):
+        return "sans journée"
+    return mois.strftime("%m/%Y")
+
+
+def evolution_fr(part):
+    """0.1 -> '+10,0 %', -0.25 -> '-25,0 %' ; une évolution vide (rien à comparer) -> '-'."""
+    if pd.isna(part):
+        return "-"
+    return ("+" if part > 0 else "") + pourcentage(part)

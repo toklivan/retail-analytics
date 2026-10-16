@@ -3,7 +3,7 @@
 import pandas as pd
 import pytest
 
-from retail_analytics import generateur, rayons
+from retail_analytics import generateur, indicateurs, rayons
 from retail_analytics.__main__ import preparer
 
 
@@ -12,12 +12,13 @@ def jeu(tmp_path_factory):
     # scope="module" : le jeu est généré une seule fois pour tous les tests de ce fichier.
     dossier = tmp_path_factory.mktemp("fictif")
     verite = generateur.generer(dossier, tmp_path_factory.mktemp("exemple"))
-    ventes, resultats = preparer(dossier / "sumup", dossier / "correspondances.csv")
-    return verite, ventes, resultats
+    propres, resultats = preparer(dossier / "sumup", dossier / "correspondances.csv")
+    return verite, propres, resultats
 
 
 def test_retrouve_les_tickets_les_lignes_et_le_ca(jeu):
-    verite, ventes, _ = jeu
+    verite, propres, _ = jeu
+    ventes = propres["ventes"]
     assert ventes["id_ticket"].nunique() == verite["nombre_tickets"]
     assert len(ventes) == verite["nombre_lignes"]
     assert ventes["montant_ttc"].sum() == verite["ca_ttc_centimes"]
@@ -25,17 +26,20 @@ def test_retrouve_les_tickets_les_lignes_et_le_ca(jeu):
 
 
 def test_retrouve_les_tickets_offerts(jeu):
-    verite, ventes, _ = jeu
+    verite, propres, _ = jeu
+    ventes = propres["ventes"]
     assert ventes.loc[ventes["offert"], "id_ticket"].nunique() == verite["nombre_tickets_offerts"]
 
 
 def test_retrouve_les_libelles_inconnus(jeu):
-    verite, ventes, _ = jeu
+    verite, propres, _ = jeu
+    ventes = propres["ventes"]
     assert sorted(rayons.libelles_inconnus(ventes).index) == verite["libelles_inconnus"]
 
 
 def test_retrouve_les_jours_sans_donnees(jeu):
-    verite, ventes, _ = jeu
+    verite, propres, _ = jeu
+    ventes = propres["ventes"]
     periode = pd.date_range(*verite["periode"])
     jours_vus = set(ventes["journee_commerciale"])
     manquants = [jour.date().isoformat() for jour in periode if jour not in jours_vus]
@@ -43,7 +47,8 @@ def test_retrouve_les_jours_sans_donnees(jeu):
 
 
 def test_seule_la_journee_coupee_par_la_fin_de_l_export_est_en_ecart(jeu):
-    verite, ventes, resultats = jeu
+    verite, propres, resultats = jeu
+    ventes = propres["ventes"]
     ecarts = resultats.pop("totaux des journées")
     assert len(ecarts) == 1
     # L'écart porte sur la journée coupée : ses tickets exportés sont ceux comptés dans l'écart,
@@ -54,3 +59,21 @@ def test_seule_la_journee_coupee_par_la_fin_de_l_export_est_en_ecart(jeu):
     assert ecart["nombre_tickets"] > ecart["nombre_tickets_calcule"]
     for nom, autres in resultats.items():
         assert autres.empty, nom
+
+
+def test_retrouve_les_tickets_payes_par_la_plateforme(jeu):
+    verite, propres, _ = jeu
+    paiements = propres["paiements"]
+    payes_plateforme = paiements.loc[paiements["moyen_paiement"] == "plateforme", "id_ticket"]
+    assert payes_plateforme.nunique() == verite["nombre_tickets_plateforme"]
+    paniers = indicateurs.panier_moyen(propres["tickets"], paiements)
+    assert paniers.xs("livraison", level="canal")["nombre_tickets"].sum() == verite["nombre_tickets_plateforme"]
+    assert indicateurs.moyens_inconnus(paiements).empty
+
+
+def test_seul_le_dernier_mois_est_incomplet(jeu):
+    verite, propres, _ = jeu
+    complets = indicateurs.mois_complets(propres["periodes"])
+    debut, fin = (pd.Period(jour, freq="M") for jour in verite["periode"])
+    assert list(complets.index) == list(pd.period_range(debut, fin, freq="M"))
+    assert list(complets[~complets].index) == [fin]

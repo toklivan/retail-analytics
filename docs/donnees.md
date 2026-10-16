@@ -111,7 +111,7 @@ Chaque entrée et sortie d'espèces, avec le solde du tiroir après l'opération
 - **Des touches génériques** : un produit vendu par famille ou à l'unité, sans code-barres. Elles passent par la table de correspondance.
 - **Des paiements en plusieurs fois** : une partie en carte, le reste en espèces. Le moyen de paiement appartient au ticket, pas à l'article.
 - **Les moyens de paiement changent d'écriture selon le rapport** : `Cash` et `Card` dans Orders, `CASH` et `CARD` dans Drawers et Accounting.
-- **Une plateforme de livraison** apparaît comme moyen de paiement. Ces ventes portent une commission et doivent être distinguées des ventes en magasin.
+- **Une plateforme de livraison** apparaît comme moyen de paiement (`UBER_EATS`). Ces ventes sont saisies en caisse au prix du magasin, alors que le client paie sur la plateforme un prix majoré, dont la plateforme retient sa commission. Elles comptent dans le chiffre d'affaires, mais sont distinguées des ventes en magasin : un ticket payé par la plateforme appartient au canal « livraison », tous les autres au canal « magasin ». Un moyen de paiement inconnu est signalé, jamais rangé d'office dans un moyen connu.
 - **Des lignes en double** dans le fichier des totaux d'Accounting. Le nettoyage dédoublonne avant tout calcul. Le même risque existe quand deux exports se chevauchent : un ticket présent dans deux fichiers n'est compté qu'une fois, grâce à son `Order ID`.
 - **Des prix d'achat à zéro et des marges négatives** dans Product Sales, preuve supplémentaire que ce coût n'est pas fiable.
 - **La remise n'apparaît pas ligne par ligne** dans Orders (colonne à zéro) alors que la journée de caisse en totalise. Les remises se repèrent par l'écart entre prix catalogue et montant encaissé.
@@ -211,9 +211,13 @@ Une ligne par portion de lot consommée : une vente de six unités à cheval sur
 
 `date`, `libelle`, `ancien_prix_ttc`, `prix_suggere_ttc`, `decision` (acceptée, modifiée, refusée), `prix_retenu_ttc`.
 
-### `paiements` (v0.10)
+### `periodes` (v0.2)
 
-`id_ticket`, `date_heure`, `moyen_paiement` (carte, espèces, plateforme de livraison), `montant`.
+`debut`, `fin` : jours couverts par chaque export, bornes comprises. Avec les exports du back-office, ils sont lus dans le nom des fichiers ; avec l'API, ce sera la période demandée. Ils servent à repérer les mois incomplets.
+
+### `paiements` (v0.1, rapprochée du relevé bancaire en v0.10)
+
+`id_ticket`, `moyen_paiement` (`especes`, `carte`, `plateforme` ; un libellé que l'adaptateur ne connaît pas est gardé tel quel et signalé), `montant_ttc`. Un ticket payé en plusieurs fois a plusieurs lignes.
 
 ### `operations_bancaires` (v0.10)
 
@@ -466,12 +470,16 @@ Ces termes sont souvent confondus. Dans ce projet, ils ne le sont jamais.
 | Taux de marque | Marge brute / CA HT |
 | Taux de marge | Marge brute / coût des ventes |
 | Coefficient multiplicateur | Prix de vente TTC / coût d'achat HT |
+| Canal | « livraison » si le ticket est payé par une plateforme de livraison, « magasin » sinon |
+| Panier moyen | Chiffre d'affaires TTC / nombre de tickets payants, calculé séparément pour chaque canal |
 | Journée commerciale | Période entre l'ouverture et la fermeture de la caisse, qui peut dépasser minuit |
 | Article offert | Article sorti du magasin avec un montant encaissé nul ; il coûte sans rapporter |
 | Démarque connue | Coût des articles offerts et de la casse enregistrée |
 | Démarque inconnue | Stock théorique − stock compté à l'inventaire, valorisé au coût des lots |
 | Colisage | Nombre d'unités dans un colis facturé |
-| Classement ABC | A : produits qui font environ 80 % du total, B : les 15 % suivants, C : le reste |
+| Classement ABC | Sur le CA HT d'un mois, produits triés du plus gros au plus petit. Un produit est en A tant que les produits mieux classés font moins de 80 % du total, en B moins de 95 %, en C au-delà |
+| Quantité vendue | Unités vendues, articles offerts exclus : ils sont comptés à part, avec leur valeur au prix de vente TTC |
+| Mois incomplet | Mois dont au moins un jour n'est couvert par aucun export. Un jour de fermeture ou de panne, inclus dans un export, ne rend pas le mois incomplet |
 
 Exemple : un produit acheté 1,50 € HT, vendu 2,11 € TTC avec une TVA à 5,5 %. Prix de vente HT : 2,00 €. Marge brute : 0,50 €. Taux de marque : 25 %. Taux de marge : 33,3 %. Coefficient : 1,41.
 
@@ -491,4 +499,6 @@ Prix de vente suggéré pour un taux de marque cible : prix HT = coût HT / (1 �
 - PEPS suppose qu'on vend d'abord le plus ancien. Si un rayon est mal tourné, le coût calculé et le coût physique peuvent légèrement différer ; l'inventaire corrige les quantités, pas l'ordre réel des sorties.
 - Avant la v0.7, aucune marge n'est calculée sur les données réelles : seul le chiffre d'affaires est fiable.
 - En v0.1, les rapports Accounting et Product Sales ne sont ni générés ni lus : les contrôles qui s'appuient sur eux (totaux par taux de TVA, ventes par produit) ne sont pas encore faits. Les contrôles entre Orders et Drawers couvrent déjà les lignes, les tickets, les paiements et les journées.
+- Les ventes par plateforme de livraison sont comptées au prix du magasin, tel que saisi en caisse. Ce n'est pas le montant que verse la plateforme (prix majoré moins commission), qui en est proche sans lui être égal. L'écart n'apparaîtra qu'au rapprochement avec le relevé bancaire, en v0.10.
+- Un mois est dit complet quand chacun de ses jours calendaires est couvert par un export. Si le dernier export s'arrête pile à la fin du mois, les tickets d'après minuit de la dernière journée manquent encore : le contrôle des totaux des journées le signale, mais le mois n'est pas marqué incomplet.
 - En v0.1, le taux de TVA de chaque produit n'est pas encore déduit des ventes : la table `produits` se limite au libellé et au rayon.

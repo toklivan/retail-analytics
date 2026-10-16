@@ -55,11 +55,12 @@ def marquer_offerts(ventes):
 
 
 def nettoyer(export):
-    """Applique tout le nettoyage aux quatre tables d'un adaptateur."""
+    """Applique tout le nettoyage aux tables d'un adaptateur ; les périodes passent telles quelles."""
     journees = dedoublonner(export["journees"], "id_journee")
     tickets = rattacher_journees(dedoublonner(export["tickets"], "id_ticket"), journees)
     paiements = dedoublonner(export["paiements"], "id_ticket")
     ventes = marquer_offerts(dedoublonner(export["ventes"], "id_ticket"))
     infos_ticket = tickets[["id_ticket", "numero_ticket", "journee_commerciale"]]
     ventes = ventes.merge(infos_ticket, on="id_ticket", how="left")[COLONNES_VENTES]
-    return {"ventes": ventes, "tickets": tickets, "paiements": paiements, "journees": journees}
+    return {"ventes": ventes, "tickets": tickets, "paiements": paiements, "journees": journees,
+            "periodes": export["periodes"]}

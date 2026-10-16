@@ -4,6 +4,25 @@ Toutes les évolutions notables du projet sont consignées ici. Les numéros de 
 
 ## [Non publié]
 
+## [0.2.0] - 2026-10-16
+
+### Ajouté
+
+- Commande `indicateurs` : indicateurs de vente par mois de journée commerciale, et détail d'un mois choisi (option `--mois`)
+- Chiffre d'affaires TTC et HT, tickets payants et tickets offerts
+- Encaissements par moyen de paiement (espèces, carte, plateforme de livraison), avec signalement des moyens inconnus
+- Panier moyen TTC, séparé pour le magasin et la livraison
+- Nombre et valeur au prix de vente des articles offerts
+- Chiffre d'affaires HT et quantités vendues par rayon et par produit, ventes sans rayon comprises
+- Classement ABC des produits sur le chiffre d'affaires d'un mois
+- Comparaison du chiffre d'affaires par rayon avec le mois précédent
+- Lecture de la période couverte par chaque export, et signalement des mois incomplets
+
+### Modifié
+
+- Les ventes par plateforme de livraison sont comptées dans le chiffre d'affaires et distinguées par leur moyen de paiement
+- Le générateur utilise le libellé réel de la plateforme de livraison dans les exports fictifs
+
 ## [0.1.0] - 2026-10-15
 
 ### Ajouté
