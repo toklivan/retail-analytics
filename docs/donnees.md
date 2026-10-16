@@ -211,9 +211,9 @@ Une ligne par portion de lot consommée : une vente de six unités à cheval sur
 
 `date`, `libelle`, `ancien_prix_ttc`, `prix_suggere_ttc`, `decision` (acceptée, modifiée, refusée), `prix_retenu_ttc`.
 
-### `paiements` (v0.10)
+### `paiements` (v0.1, rapprochée du relevé bancaire en v0.10)
 
-`id_ticket`, `date_heure`, `moyen_paiement` (carte, espèces, plateforme de livraison), `montant`.
+`id_ticket`, `moyen_paiement` (`especes`, `carte`, `plateforme` ; un libellé que l'adaptateur ne connaît pas est gardé tel quel et signalé), `montant_ttc`. Un ticket payé en plusieurs fois a plusieurs lignes.
 
 ### `operations_bancaires` (v0.10)
 
