@@ -4,6 +4,15 @@ Toutes les évolutions notables du projet sont consignées ici. Les numéros de 
 
 ## [Non publié]
 
+### Ajouté
+
+- Commande `indicateurs` : chiffre d'affaires TTC et HT, tickets payants et offerts, par mois de journée commerciale
+- Encaissements par moyen de paiement (espèces, carte, plateforme de livraison), avec signalement des moyens inconnus
+
+### Modifié
+
+- Les ventes par plateforme de livraison sont comptées dans le chiffre d'affaires et distinguées par leur moyen de paiement
+
 ## [0.1.0] - 2026-10-15
 
 ### Ajouté
