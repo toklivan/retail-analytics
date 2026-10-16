@@ -14,11 +14,12 @@ def export():
     return sumup.lire_export(FIXTURES)
 
 
-def test_lit_les_quatre_tables(export):
+def test_lit_les_cinq_tables(export):
     assert len(export["ventes"]) == 5
     assert len(export["tickets"]) == 4
     assert len(export["paiements"]) == 4
     assert len(export["journees"]) == 1
+    assert len(export["periodes"]) == 1
 
 
 def test_traduit_les_colonnes(export):
@@ -51,6 +52,18 @@ def test_garde_tel_quel_un_moyen_de_paiement_inconnu():
     brut = pd.DataFrame({"Order ID": ["T1", "T2"], "Payment Method": ["Card", "TITRE_RESTO"],
                          "Payments Amount": ["1,00", "2,00"]})
     assert list(sumup.preparer_paiements(brut)["moyen_paiement"]) == ["carte", "TITRE_RESTO"]
+
+
+def test_lit_la_periode_dans_le_nom_du_fichier(export):
+    periode = export["periodes"].iloc[0]
+    assert periode["debut"] == pd.Timestamp("2026-03-02")
+    assert periode["fin"] == pd.Timestamp("2026-03-03")
+
+
+def test_refuse_un_nom_de_fichier_sans_periode_lisible(tmp_path):
+    (tmp_path / "orders-report-products-mars.csv").write_text("")
+    with pytest.raises(ValueError):
+        sumup.lire_periodes(tmp_path)
 
 
 def test_en_centimes_lit_les_montants_negatifs_et_nuls():

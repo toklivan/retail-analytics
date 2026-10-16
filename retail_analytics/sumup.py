@@ -1,8 +1,8 @@
 """Adaptateur des exports de la Caisse Pro SumUp.
 
-Il lit les fichiers exportés depuis le back-office et rend quatre tables au
-format interne (voir docs/donnees.md, section 5) : ventes, tickets, paiements
-et journées. Les colonnes sont traduites, les montants convertis en centimes
+Il lit les fichiers exportés depuis le back-office et rend cinq tables au
+format interne (voir docs/donnees.md, section 5) : ventes, tickets, paiements,
+journées, et les périodes couvertes par les exports. Les colonnes sont traduites, les montants convertis en centimes
 entiers, les dates en vraies dates. Le reste du code ne voit jamais le format
 SumUp : passer à l'API ne changera que ce module.
 
@@ -132,11 +132,30 @@ def lire_fichiers(dossier, prefixe):
     return pd.concat(tables, ignore_index=True)
 
 
+def lire_periodes(dossier):
+    """Début et fin de chaque export, lus dans le nom des fichiers de ventes.
+
+    `orders-report-products-2026-01-31_2026-02-28.csv` couvre les tickets clos
+    du 31/01/2026 au 28/02/2026 inclus. Un nom mal formé arrête la lecture.
+    """
+    prefixe = "orders-report-products-"
+    noms = [chemin.stem.removeprefix(prefixe) for chemin in sorted(Path(dossier).glob(f"{prefixe}*.csv"))]
+    if not noms:
+        raise FileNotFoundError(f"Aucun fichier {prefixe}*.csv dans {dossier}")
+    # partition coupe le texte au premier « _ » : ('2026-01-31', '_', '2026-02-28').
+    bornes = [nom.partition("_") for nom in noms]
+    return pd.DataFrame({
+        "debut": pd.to_datetime([debut for debut, _, _ in bornes], format="%Y-%m-%d"),
+        "fin": pd.to_datetime([fin for _, _, fin in bornes], format="%Y-%m-%d"),
+    })
+
+
 def lire_export(dossier):
-    """Les quatre tables internes, lues depuis un dossier d'exports SumUp."""
+    """Les cinq tables internes, lues depuis un dossier d'exports SumUp."""
     return {
         "ventes": preparer_ventes(lire_fichiers(dossier, "orders-report-products")),
         "tickets": preparer_tickets(lire_fichiers(dossier, "orders-report-totals")),
         "paiements": preparer_paiements(lire_fichiers(dossier, "orders-report-payments")),
         "journees": preparer_journees(lire_fichiers(dossier, "drawers-report-totals")),
+        "periodes": lire_periodes(dossier),
     }
