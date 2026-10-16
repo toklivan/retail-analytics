@@ -31,3 +31,10 @@ def mois_fr(mois):
     if pd.isna(mois):
         return "sans journée"
     return mois.strftime("%m/%Y")
+
+
+def evolution_fr(part):
+    """0.1 -> '+10,0 %', -0.25 -> '-25,0 %' ; une évolution vide (rien à comparer) -> '-'."""
+    if pd.isna(part):
+        return "-"
+    return ("+" if part > 0 else "") + pourcentage(part)
