@@ -211,6 +211,10 @@ Une ligne par portion de lot consommée : une vente de six unités à cheval sur
 
 `date`, `libelle`, `ancien_prix_ttc`, `prix_suggere_ttc`, `decision` (acceptée, modifiée, refusée), `prix_retenu_ttc`.
 
+### `periodes` (v0.2)
+
+`debut`, `fin` : jours couverts par chaque export, bornes comprises. Avec les exports du back-office, ils sont lus dans le nom des fichiers ; avec l'API, ce sera la période demandée. Ils servent à repérer les mois incomplets.
+
 ### `paiements` (v0.1, rapprochée du relevé bancaire en v0.10)
 
 `id_ticket`, `moyen_paiement` (`especes`, `carte`, `plateforme` ; un libellé que l'adaptateur ne connaît pas est gardé tel quel et signalé), `montant_ttc`. Un ticket payé en plusieurs fois a plusieurs lignes.
@@ -473,7 +477,9 @@ Ces termes sont souvent confondus. Dans ce projet, ils ne le sont jamais.
 | Démarque connue | Coût des articles offerts et de la casse enregistrée |
 | Démarque inconnue | Stock théorique − stock compté à l'inventaire, valorisé au coût des lots |
 | Colisage | Nombre d'unités dans un colis facturé |
-| Classement ABC | A : produits qui font environ 80 % du total, B : les 15 % suivants, C : le reste |
+| Classement ABC | Sur le CA HT d'un mois, produits triés du plus gros au plus petit. Un produit est en A tant que les produits mieux classés font moins de 80 % du total, en B moins de 95 %, en C au-delà |
+| Quantité vendue | Unités vendues, articles offerts exclus : ils sont comptés à part, avec leur valeur au prix de vente TTC |
+| Mois incomplet | Mois dont au moins un jour n'est couvert par aucun export. Un jour de fermeture ou de panne, inclus dans un export, ne rend pas le mois incomplet |
 
 Exemple : un produit acheté 1,50 € HT, vendu 2,11 € TTC avec une TVA à 5,5 %. Prix de vente HT : 2,00 €. Marge brute : 0,50 €. Taux de marque : 25 %. Taux de marge : 33,3 %. Coefficient : 1,41.
 
@@ -494,4 +500,5 @@ Prix de vente suggéré pour un taux de marque cible : prix HT = coût HT / (1 �
 - Avant la v0.7, aucune marge n'est calculée sur les données réelles : seul le chiffre d'affaires est fiable.
 - En v0.1, les rapports Accounting et Product Sales ne sont ni générés ni lus : les contrôles qui s'appuient sur eux (totaux par taux de TVA, ventes par produit) ne sont pas encore faits. Les contrôles entre Orders et Drawers couvrent déjà les lignes, les tickets, les paiements et les journées.
 - Les ventes par plateforme de livraison sont comptées au prix du magasin, tel que saisi en caisse. Ce n'est pas le montant que verse la plateforme (prix majoré moins commission), qui en est proche sans lui être égal. L'écart n'apparaîtra qu'au rapprochement avec le relevé bancaire, en v0.10.
+- Un mois est dit complet quand chacun de ses jours calendaires est couvert par un export. Si le dernier export s'arrête pile à la fin du mois, les tickets d'après minuit de la dernière journée manquent encore : le contrôle des totaux des journées le signale, mais le mois n'est pas marqué incomplet.
 - En v0.1, le taux de TVA de chaque produit n'est pas encore déduit des ventes : la table `produits` se limite au libellé et au rayon.

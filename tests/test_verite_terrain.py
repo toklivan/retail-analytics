@@ -69,3 +69,11 @@ def test_retrouve_les_tickets_payes_par_la_plateforme(jeu):
     paniers = indicateurs.panier_moyen(propres["tickets"], paiements)
     assert paniers.xs("livraison", level="canal")["nombre_tickets"].sum() == verite["nombre_tickets_plateforme"]
     assert indicateurs.moyens_inconnus(paiements).empty
+
+
+def test_seul_le_dernier_mois_est_incomplet(jeu):
+    verite, propres, _ = jeu
+    complets = indicateurs.mois_complets(propres["periodes"])
+    debut, fin = (pd.Period(jour, freq="M") for jour in verite["periode"])
+    assert list(complets.index) == list(pd.period_range(debut, fin, freq="M"))
+    assert list(complets[~complets].index) == [fin]
