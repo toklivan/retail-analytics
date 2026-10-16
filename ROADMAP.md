@@ -24,7 +24,7 @@ Source : les exports de la caisse.
 
 Terminé quand : une commande produit un fichier de ventes propre et catégorisé à partir du jeu fictif, et les tests passent en CI.
 
-### v0.2.0 : les indicateurs de vente (En cours)
+### v0.2.0 : les indicateurs de vente (Livré)
 
 > Qu'est-ce qui se vend vraiment ?
 
