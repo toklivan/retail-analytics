@@ -43,6 +43,16 @@ def test_garde_le_ticket_d_apres_minuit_a_sa_vraie_date(export):
     assert ticket["date_heure"] == pd.Timestamp("2026-03-03 00:10:00")
 
 
+def test_traduit_les_moyens_de_paiement(export):
+    assert list(export["paiements"]["moyen_paiement"]) == ["carte", "carte", "especes", "plateforme"]
+
+
+def test_garde_tel_quel_un_moyen_de_paiement_inconnu():
+    brut = pd.DataFrame({"Order ID": ["T1", "T2"], "Payment Method": ["Card", "TITRE_RESTO"],
+                         "Payments Amount": ["1,00", "2,00"]})
+    assert list(sumup.preparer_paiements(brut)["moyen_paiement"]) == ["carte", "TITRE_RESTO"]
+
+
 def test_en_centimes_lit_les_montants_negatifs_et_nuls():
     textes = pd.Series(["12,40", "0,00", "-1,10", "0,07"])
     assert list(sumup.en_centimes(textes)) == [1240, 0, -110, 7]

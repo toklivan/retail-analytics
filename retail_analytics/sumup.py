@@ -26,6 +26,10 @@ COLONNES_JOURNEES = {"Drawer ID": "id_journee", "Opening Date": "ouverture", "Cl
                      "# Orders": "nombre_tickets", "Sales incl Tax": "ca_ttc", "Sales excl Tax": "ca_ht",
                      "Total Discounts": "remises_ttc"}
 
+# Moyens de paiement SumUp -> nom interne. Un libellé absent de cette table est
+# gardé tel quel : il n'est pas deviné, et les indicateurs le signalent.
+MOYENS_PAIEMENT = {"Cash": "especes", "Card": "carte", "UBER_EATS": "plateforme"}
+
 FORMAT_DATE = "%Y-%m-%d %H:%M:%S"
 
 
@@ -91,6 +95,8 @@ def preparer_tickets(brut):
 
 def preparer_paiements(brut):
     paiements = traduire(brut, COLONNES_PAIEMENTS)
+    # replace avec un dictionnaire remplace les valeurs trouvées et laisse les autres intactes.
+    paiements["moyen_paiement"] = paiements["moyen_paiement"].replace(MOYENS_PAIEMENT)
     paiements["montant_ttc"] = en_centimes(paiements["montant_ttc"])
     return paiements
 
