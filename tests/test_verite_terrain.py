@@ -66,4 +66,6 @@ def test_retrouve_les_tickets_payes_par_la_plateforme(jeu):
     paiements = propres["paiements"]
     payes_plateforme = paiements.loc[paiements["moyen_paiement"] == "plateforme", "id_ticket"]
     assert payes_plateforme.nunique() == verite["nombre_tickets_plateforme"]
+    paniers = indicateurs.panier_moyen(propres["tickets"], paiements)
+    assert paniers.xs("livraison", level="canal")["nombre_tickets"].sum() == verite["nombre_tickets_plateforme"]
     assert indicateurs.moyens_inconnus(paiements).empty

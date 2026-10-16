@@ -3,6 +3,8 @@
 import argparse
 from pathlib import Path
 
+import pandas as pd
+
 from retail_analytics import controles, generateur, indicateurs, nettoyage, rayons, sumup
 from retail_analytics.affichage import date_fr, euros, mois_fr, nombre, pourcentage
 
@@ -78,6 +80,20 @@ def afficher_moyens(paiements, tickets):
               f"{euros(ligne['montant_ttc'])})")
 
 
+def afficher_paniers(tickets, paiements):
+    paniers = indicateurs.panier_moyen(tickets, paiements)
+    print("Panier moyen TTC par canal (nombre de tickets payants entre parenthèses) :")
+    print(f"  {'Mois':<13}{'Magasin':>23}{'Livraison':>23}")
+    # unstack fait passer les canaux en colonnes ; un canal absent du mois devient une valeur vide.
+    for mois, ligne in paniers.unstack("canal").iterrows():
+        cellules = ""
+        for canal in ["magasin", "livraison"]:
+            panier, nombre_tickets = ligne.get(("panier_moyen", canal)), ligne.get(("nombre_tickets", canal))
+            texte = "-" if pd.isna(panier) else f"{euros(int(panier))} ({nombre(int(nombre_tickets))})"
+            cellules += f"{texte:>23}"
+        print(f"  {mois_fr(mois):<13}{cellules}")
+
+
 def commande_indicateurs(args):
     export = Path(args.export)
     correspondances = Path(args.correspondances or export.parent / "correspondances.csv")
@@ -88,6 +104,7 @@ def commande_indicateurs(args):
         print(f"Attention, contrôles en écart : {', '.join(en_ecart)}. Détail avec la commande nettoyer.")
     afficher_chiffre_affaires(propres["tickets"])
     afficher_moyens(propres["paiements"], propres["tickets"])
+    afficher_paniers(propres["tickets"], propres["paiements"])
 
 
 def main():

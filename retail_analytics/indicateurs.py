@@ -53,3 +53,29 @@ def moyens_inconnus(paiements):
     inconnus = paiements[~paiements["moyen_paiement"].isin(MOYENS_CONNUS)]
     return inconnus.groupby("moyen_paiement").agg(nombre_paiements=("id_ticket", "count"),
                                                   montant_ttc=("montant_ttc", "sum"))
+
+
+def canal_des_tickets(tickets, paiements):
+    """Ajoute la colonne `canal` : « livraison » si le ticket est payé, même en partie, par la plateforme.
+
+    Tous les autres tickets sont « magasin », y compris ceux payés par un moyen
+    inconnu : ce moyen est signalé à part par `moyens_inconnus`.
+    """
+    livres = paiements.loc[paiements["moyen_paiement"] == "plateforme", "id_ticket"]
+    # map remplace chaque valeur par celle que lui associe le dictionnaire.
+    return tickets.assign(canal=tickets["id_ticket"].isin(livres).map({True: "livraison", False: "magasin"}))
+
+
+def panier_moyen(tickets, paiements):
+    """Nombre de tickets payants, CA TTC et panier moyen TTC, par mois et par canal.
+
+    Les tickets offerts (à 0 €) n'entrent pas dans le calcul. Un canal sans
+    ticket dans un mois n'a pas de ligne : son panier moyen n'existe pas.
+    """
+    payants = canal_des_tickets(tickets[tickets["montant_ttc"] > 0], paiements)
+    payants = payants.assign(mois=mois_commercial(payants["journee_commerciale"]))
+    resume = payants.groupby(["mois", "canal"], dropna=False).agg(nombre_tickets=("id_ticket", "count"),
+                                                                  ca_ttc=("montant_ttc", "sum"))
+    # round arrondit au centime le plus proche ; pile au milieu (100,5), il va au nombre pair (100).
+    resume["panier_moyen"] = (resume["ca_ttc"] / resume["nombre_tickets"]).round().astype("int64")
+    return resume

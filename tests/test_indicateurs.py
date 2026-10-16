@@ -62,3 +62,33 @@ def test_un_moyen_de_paiement_inconnu_a_sa_colonne_et_il_est_signale(propres):
 
 def test_aucun_moyen_inconnu_dans_les_fixtures(propres):
     assert indicateurs.moyens_inconnus(propres["paiements"]).empty
+
+
+def test_un_ticket_paye_en_partie_par_la_plateforme_est_une_livraison():
+    tickets = pd.DataFrame({"id_ticket": ["T1", "T2"]})
+    paiements = pd.DataFrame({"id_ticket": ["T1", "T2", "T2"],
+                              "moyen_paiement": ["carte", "carte", "plateforme"]})
+    canaux = indicateurs.canal_des_tickets(tickets, paiements)
+    assert list(canaux["canal"]) == ["magasin", "livraison"]
+
+
+def test_panier_moyen_par_canal(propres):
+    paniers = indicateurs.panier_moyen(propres["tickets"], propres["paiements"])
+    # Magasin : T1 (3,50 €) et T2 (4,80 €) ; T3, offert, n'est pas compté. Livraison : T4 (2,00 €).
+    assert paniers.loc[(MARS, "magasin")].to_dict() == {"nombre_tickets": 2, "ca_ttc": 830, "panier_moyen": 415}
+    assert paniers.loc[(MARS, "livraison")].to_dict() == {"nombre_tickets": 1, "ca_ttc": 200, "panier_moyen": 200}
+
+
+def test_le_panier_moyen_est_arrondi_au_centime():
+    tickets = pd.DataFrame({"id_ticket": ["T1", "T2", "T3"], "montant_ttc": [100, 100, 101],
+                            "journee_commerciale": pd.to_datetime(["2026-03-02"] * 3)})
+    paiements = pd.DataFrame({"id_ticket": ["T1", "T2", "T3"], "moyen_paiement": ["carte"] * 3})
+    assert indicateurs.panier_moyen(tickets, paiements).loc[(MARS, "magasin"), "panier_moyen"] == 100
+
+
+def test_un_mois_sans_livraison_n_a_pas_de_panier_livraison():
+    tickets = pd.DataFrame({"id_ticket": ["T1"], "montant_ttc": [350],
+                            "journee_commerciale": pd.to_datetime(["2026-03-02"])})
+    paiements = pd.DataFrame({"id_ticket": ["T1"], "moyen_paiement": ["especes"]})
+    paniers = indicateurs.panier_moyen(tickets, paiements)
+    assert list(paniers.index) == [(MARS, "magasin")]

@@ -8,6 +8,7 @@ Toutes les évolutions notables du projet sont consignées ici. Les numéros de 
 
 - Commande `indicateurs` : chiffre d'affaires TTC et HT, tickets payants et offerts, par mois de journée commerciale
 - Encaissements par moyen de paiement (espèces, carte, plateforme de livraison), avec signalement des moyens inconnus
+- Panier moyen TTC par mois, séparé pour le magasin et la livraison
 
 ### Modifié
 
