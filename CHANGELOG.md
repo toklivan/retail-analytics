@@ -4,6 +4,8 @@ Toutes les évolutions notables du projet sont consignées ici. Les numéros de 
 
 ## [Non publié]
 
+## [0.3.0] - 2026-10-19
+
 ### Ajouté
 
 - Commande `rapport` : rapport mensuel des ventes en une page HTML autonome, graphiques compris, imprimable en PDF depuis le navigateur
