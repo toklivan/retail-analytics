@@ -6,10 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 from retail_analytics import controles, generateur, indicateurs, nettoyage, rayons, sumup
-from retail_analytics.affichage import date_fr, euros, evolution_fr, mois_fr, nombre, pourcentage
-
-# Nom affiché de chaque moyen de paiement ; un moyen inconnu garde son libellé d'origine.
-NOMS_MOYENS = {"especes": "Espèces", "carte": "Carte", "plateforme": "Uber Eats"}
+from retail_analytics.affichage import NOMS_MOYENS, date_fr, euros, evolution_fr, mois_fr, nombre, pourcentage
 
 
 def commande_generer(args):
