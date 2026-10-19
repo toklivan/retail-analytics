@@ -4,6 +4,15 @@ Toutes les évolutions notables du projet sont consignées ici. Les numéros de 
 
 ## [Non publié]
 
+## [0.3.0] - 2026-10-19
+
+### Ajouté
+
+- Commande `rapport` : rapport mensuel des ventes en une page HTML autonome, graphiques compris, imprimable en PDF depuis le navigateur
+- Graphiques du chiffre d'affaires HT par mois, par rayon comparé au mois précédent, et des dix premiers produits
+- Points à retenir du mois : rayon qui progresse le plus, rayon qui recule le plus (classés en euros), produit n°1
+- Section « Fiabilité des données » : part du chiffre d'affaires sans rayon, libellés à ajouter à la table de correspondance, résultat des contrôles
+
 ## [0.2.0] - 2026-10-16
 
 ### Ajouté

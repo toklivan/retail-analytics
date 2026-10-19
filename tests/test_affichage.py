@@ -2,7 +2,7 @@ from datetime import date
 
 import pandas as pd
 
-from retail_analytics.affichage import date_fr, euros, evolution_fr, mois_fr, nombre, pourcentage
+from retail_analytics.affichage import date_fr, euros, evolution_fr, mois_fr, mois_long, nombre, pourcentage
 
 
 def test_euros():
@@ -37,3 +37,7 @@ def test_evolution_fr():
     assert evolution_fr(-0.25) == "-25,0 %"
     assert evolution_fr(0) == "0,0 %"
     assert evolution_fr(float("nan")) == "-"
+
+
+def test_mois_en_toutes_lettres():
+    assert mois_long(pd.Period("2026-08")) == "août 2026"

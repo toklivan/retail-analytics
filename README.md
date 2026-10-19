@@ -2,7 +2,7 @@
 
 Un outil d'analyse et de pilotage pour un commerce d'alimentation de proximité. Il part des données que le commerce produit déjà (les ventes de la caisse, les factures des fournisseurs, le relevé bancaire) et les transforme en réponses concrètes : quels rayons font la marge, quand un fournisseur augmente ses prix, ce qui va manquer en rayon, ce que le mois a réellement rapporté.
 
-**État : en construction.** La première version (v0.1.0) est livrée. Ce qui fonctionne déjà est listé dans [État actuel](#état-actuel). Le reste est décrit dans la [feuille de route](ROADMAP.md).
+**État : en construction.** Les trois premières versions (v0.1.0 à v0.3.0) sont livrées. Ce qui fonctionne déjà est listé dans [État actuel](#état-actuel). Le reste est décrit dans la [feuille de route](ROADMAP.md).
 
 ## Pourquoi ce projet
 
@@ -47,7 +47,7 @@ Chaque version est livrable, testée et taguée. Le détail version par version 
 
 ## État actuel
 
-Dernière version livrée : **v0.2.0, les indicateurs de vente**.
+Dernière version livrée : **v0.3.0, le rapport mensuel**.
 
 - [x] Générateur de données fictives : ventes et journées de caisse de janvier à mi-octobre 2026, au format des exports de la caisse et avec leurs défauts
 - [x] Lecture et nettoyage des ventes : doublons entre exports retirés, articles offerts repérés, tickets d'après minuit rattachés à leur journée de caisse
@@ -55,6 +55,7 @@ Dernière version livrée : **v0.2.0, les indicateurs de vente**.
 - [x] Rattachement de chaque produit à un rayon, avec la liste des libellés inconnus et la part du chiffre d'affaires non rattachée
 - [x] Indicateurs de vente par mois : chiffre d'affaires, tickets, panier moyen pour le magasin et la livraison, encaissements par moyen de paiement, articles offerts
 - [x] Détail d'un mois : chiffre d'affaires par rayon comparé au mois précédent, classement ABC des produits, mois incomplets signalés
+- [x] Rapport mensuel en une page HTML : chiffres clés et points à retenir, graphiques du chiffre d'affaires par mois, par rayon et des premiers produits, encaissements, articles offerts, fiabilité des données
 - [x] Tests automatisés, dont un test qui vérifie que l'outil retrouve les défauts cachés dans le jeu fictif, et intégration continue
 
 ### Installation
@@ -96,6 +97,14 @@ Pour détailler un autre mois, par exemple septembre 2026 :
 ```
 python -m retail_analytics indicateurs --mois 2026-09
 ```
+
+Produire le rapport du dernier mois complet, en une page HTML :
+
+```
+python -m retail_analytics rapport
+```
+
+Le fichier `rapport_2026-09.html` est écrit à côté des exports. Il s'ouvre dans un navigateur, et s'imprime en PDF depuis celui-ci. Pour un autre mois, ajouter `--mois 2026-08`.
 
 Lancer les tests :
 

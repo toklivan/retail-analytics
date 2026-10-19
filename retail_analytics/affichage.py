@@ -2,6 +2,12 @@
 
 import pandas as pd
 
+# Nom affiché de chaque moyen de paiement ; un moyen inconnu garde son libellé d'origine.
+NOMS_MOYENS = {"especes": "Espèces", "carte": "Carte", "plateforme": "Uber Eats"}
+
+NOMS_DES_MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août",
+                 "septembre", "octobre", "novembre", "décembre"]
+
 
 def nombre(entier):
     """28578 -> '28 578'."""
@@ -31,6 +37,11 @@ def mois_fr(mois):
     if pd.isna(mois):
         return "sans journée"
     return mois.strftime("%m/%Y")
+
+
+def mois_long(mois):
+    """Mois en toutes lettres : 2026-09 -> 'septembre 2026'."""
+    return f"{NOMS_DES_MOIS[mois.month - 1]} {mois.year}"
 
 
 def evolution_fr(part):

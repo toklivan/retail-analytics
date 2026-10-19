@@ -5,11 +5,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from retail_analytics import controles, generateur, indicateurs, nettoyage, rayons, sumup
-from retail_analytics.affichage import date_fr, euros, evolution_fr, mois_fr, nombre, pourcentage
-
-# Nom affiché de chaque moyen de paiement ; un moyen inconnu garde son libellé d'origine.
-NOMS_MOYENS = {"especes": "Espèces", "carte": "Carte", "plateforme": "Uber Eats"}
+from retail_analytics import controles, generateur, indicateurs, nettoyage, rapport, rayons, sumup
+from retail_analytics.affichage import NOMS_MOYENS, date_fr, euros, evolution_fr, mois_fr, nombre, pourcentage
 
 
 def commande_generer(args):
@@ -156,6 +153,23 @@ def commande_indicateurs(args):
     afficher_abc(propres["ventes"], mois)
 
 
+def commande_rapport(args):
+    export = Path(args.export)
+    correspondances = Path(args.correspondances or export.parent / "correspondances.csv")
+    propres, resultats = preparer(export, correspondances)
+    complets = indicateurs.mois_complets(propres["periodes"])
+    mois = mois_a_detailler(args.mois, complets, propres["tickets"])
+    try:
+        page = rapport.construire_rapport(propres, resultats, mois, complets, pd.Timestamp.today())
+    except ValueError as erreur:
+        # SystemExit arrête le programme avec ce message, sans la trace d'erreur de Python.
+        raise SystemExit(f"Rapport impossible : {erreur}")
+    # Comme les ventes propres, le rapport va à côté des exports : celui des données réelles reste dans data/raw/.
+    sortie = Path(args.sortie or export.parent / f"rapport_{mois}.html")
+    sortie.write_text(page, encoding="utf-8")
+    print(f"Rapport de {mois_fr(mois)} écrit dans {sortie}")
+
+
 def main():
     # argparse lit les arguments de la ligne de commande et génère l'aide (--help).
     parseur = argparse.ArgumentParser(prog="retail_analytics")
@@ -177,6 +191,13 @@ def main():
     calculer.add_argument("--correspondances", help="table libellé;rayon (par défaut, à côté des exports)")
     calculer.add_argument("--mois", help="mois détaillé, au format AAAA-MM (par défaut, le dernier mois complet)")
     calculer.set_defaults(fonction=commande_indicateurs)
+
+    produire = commandes.add_parser("rapport", help="produit le rapport mensuel en HTML")
+    produire.add_argument("--export", default="data/fictif/sumup", help="dossier des exports SumUp")
+    produire.add_argument("--correspondances", help="table libellé;rayon (par défaut, à côté des exports)")
+    produire.add_argument("--mois", help="mois du rapport, au format AAAA-MM (par défaut, le dernier mois complet)")
+    produire.add_argument("--sortie", help="fichier produit (par défaut, à côté des exports)")
+    produire.set_defaults(fonction=commande_rapport)
 
     args = parseur.parse_args()
     args.fonction(args)

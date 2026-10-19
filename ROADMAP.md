@@ -36,7 +36,7 @@ Terminé quand : une commande produit un fichier de ventes propre et catégoris�
 
 Pas encore de marge : le coût d'achat saisi dans la caisse n'est pas fiable, et le vrai coût arrive en v0.7.
 
-### v0.3.0 : le rapport mensuel (Prévu)
+### v0.3.0 : le rapport mensuel (Livré)
 
 > Qu'est-ce que je dois retenir de ce mois ?
 
