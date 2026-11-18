@@ -38,3 +38,17 @@ def test_les_ventes_sans_rayon_ont_un_nom():
 def test_dix_produits_au_plus():
     par_produit = pd.DataFrame({"ca_ht": range(1500, 0, -100)}, index=[f"Produit {n}" for n in range(15)])
     assert len(graphiques.premiers_produits(par_produit).axes[0].patches) == 10
+
+
+def test_carte_de_chaleur():
+    # Deux heures, dont 0 h 30 après minuit ; le dimanche n'a jamais été ouvert.
+    table = pd.DataFrame({18: [45000.0] * 6 + [None], 24: [0.0] * 5 + [70000.0, None]}, index=range(7))
+    axe = graphiques.carte_de_chaleur(table).axes[0]
+    image = axe.images[0].get_array()
+    # Une case par jour et par heure, en euros.
+    assert image.shape == (7, 2)
+    assert image[5, 1] == 700
+    # La case du dimanche reste vide : elle n'est pas tracée à 0 €.
+    assert image.mask[6, 0]
+    assert [etiquette.get_text() for etiquette in axe.get_xticklabels()] == ["18 h", "0 h"]
+    assert axe.get_yticklabels()[6].get_text() == "dimanche"

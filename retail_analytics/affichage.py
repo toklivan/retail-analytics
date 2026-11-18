@@ -8,6 +8,9 @@ NOMS_MOYENS = {"especes": "Espèces", "carte": "Carte", "plateforme": "Uber Eats
 NOMS_DES_MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août",
                  "septembre", "octobre", "novembre", "décembre"]
 
+# Dans l'ordre de pandas : 0 pour lundi, 6 pour dimanche.
+NOMS_DES_JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
+
 
 def nombre(entier):
     """28578 -> '28 578'."""
@@ -49,3 +52,8 @@ def evolution_fr(part):
     if pd.isna(part):
         return "-"
     return ("+" if part > 0 else "") + pourcentage(part)
+
+
+def heure_fr(heure_de_journee):
+    """Heure de journée -> « 18 h » ; après minuit, 24 redevient « 0 h »."""
+    return f"{heure_de_journee % 24} h"
