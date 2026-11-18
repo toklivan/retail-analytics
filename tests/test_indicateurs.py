@@ -186,3 +186,85 @@ def test_comparer_sans_mois_precedent():
     comparaison = indicateurs.comparer_au_mois_precedent(par_rayon, MARS)
     assert comparaison.loc["Boissons", "precedent"] == 0
     assert pd.isna(comparaison.loc["Boissons", "evolution"])
+
+
+def tickets_sur_deux_lundis():
+    # Mars 2026 : les lundis 2 et 9, et le samedi 7. Le lundi 9, un ticket offert et un ticket livré.
+    tickets = pd.DataFrame({"id_ticket": ["L1", "L2", "L3", "L4", "S1"],
+                            "date_heure": pd.to_datetime(["2026-03-02 10:15", "2026-03-09 10:40",
+                                                          "2026-03-09 11:05", "2026-03-09 18:00",
+                                                          "2026-03-08 00:30"]),
+                            "journee_commerciale": pd.to_datetime(["2026-03-02", "2026-03-09", "2026-03-09",
+                                                                   "2026-03-09", "2026-03-07"]),
+                            "montant_ttc": [300, 500, 0, 1000, 800],
+                            "montant_ht": [250, 450, 0, 900, 700]})
+    paiements = pd.DataFrame({"id_ticket": ["L1", "L2", "L4", "S1"],
+                              "moyen_paiement": ["carte", "especes", "plateforme", "carte"],
+                              "montant_ttc": [300, 500, 1000, 800]})
+    journees = pd.DataFrame({"ouverture": pd.to_datetime(["2026-03-02 08:00", "2026-03-07 08:00",
+                                                          "2026-03-09 08:00", "2026-03-10 08:00"])})
+    return tickets, paiements, journees
+
+
+def test_un_ticket_apres_minuit_se_range_apres_23_h(propres):
+    # T4, clos le 3 mars à 0 h 10 dans la journée du 2 mars.
+    heures = indicateurs.heure_de_journee(propres["tickets"])
+    assert list(heures) == [10, 18, 21, 24]
+
+
+def test_jours_ouverts_compte_une_journee_sans_vente():
+    _, _, journees = tickets_sur_deux_lundis()
+    # Le mardi 10 n'a aucun ticket, mais la caisse a été ouverte.
+    assert len(indicateurs.jours_ouverts(journees, MARS)) == 4
+
+
+def test_rythme_par_jour_ramene_a_un_jour_ouvert():
+    rythme = indicateurs.rythme_par_jour(*tickets_sur_deux_lundis(), MARS)
+    assert list(rythme.index) == list(range(7))
+    lundi = rythme.loc[0]
+    assert lundi["jours_ouverts"] == 2
+    assert lundi["ca_ht"] == 1600
+    assert lundi["ca_ht_par_jour"] == 800
+    # Le ticket offert ne compte pas : trois tickets payants sur deux lundis.
+    assert lundi["tickets_par_jour"] == 1.5
+    # Le ticket livré ne compte pas dans le panier du magasin : (300 + 500) / 2.
+    assert lundi["panier_moyen_magasin"] == 400
+
+
+def test_la_vente_de_0_h_30_compte_pour_le_samedi():
+    rythme = indicateurs.rythme_par_jour(*tickets_sur_deux_lundis(), MARS)
+    assert rythme.loc[5, "ca_ht"] == 700
+    assert rythme.loc[6, "ca_ht"] == 0
+
+
+def test_un_jour_jamais_ouvert_a_des_moyennes_vides():
+    rythme = indicateurs.rythme_par_jour(*tickets_sur_deux_lundis(), MARS)
+    dimanche = rythme.loc[6]
+    assert dimanche["jours_ouverts"] == 0
+    assert pd.isna(dimanche["ca_ht_par_jour"])
+    assert pd.isna(dimanche["panier_moyen_magasin"])
+
+
+def test_rythme_par_heure():
+    rythme = indicateurs.rythme_par_heure(*tickets_sur_deux_lundis(), MARS)
+    # De 10 h à 24 h (0 h 30 du dimanche), sans trou.
+    assert list(rythme.index) == list(range(10, 25))
+    # 10 h : deux tickets, 700 € HT au total, sur quatre jours ouverts.
+    assert rythme.loc[10, "ca_ht"] == 700
+    assert rythme.loc[10, "ca_ht_par_jour"] == 175
+    assert rythme.loc[12, "ca_ht"] == 0
+    assert rythme.loc[24, "ca_ht"] == 700
+
+
+def test_les_rythmes_retrouvent_le_chiffre_d_affaires_du_mois():
+    tickets, paiements, journees = tickets_sur_deux_lundis()
+    ca = indicateurs.chiffre_affaires(tickets).loc[MARS, "ca_ht"]
+    assert indicateurs.rythme_par_jour(tickets, paiements, journees, MARS)["ca_ht"].sum() == ca
+    assert indicateurs.rythme_par_heure(tickets, paiements, journees, MARS)["ca_ht"].sum() == ca
+
+
+def test_rythme_d_un_mois_sans_vente():
+    tickets, paiements, journees = tickets_sur_deux_lundis()
+    avril = pd.Period("2026-04")
+    assert indicateurs.rythme_par_jour(tickets, paiements, journees, avril)["ca_ht"].sum() == 0
+    assert indicateurs.rythme_par_heure(tickets, paiements, journees, avril).empty

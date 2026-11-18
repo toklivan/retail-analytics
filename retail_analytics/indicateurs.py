@@ -160,3 +160,79 @@ def comparer_au_mois_precedent(par_mois_et_rayon, mois):
     ca = ca[(ca["precedent"] != 0) | (ca["actuel"] != 0)]
     evolution = (ca["actuel"] - ca["precedent"]) / ca["precedent"].where(ca["precedent"] != 0)
     return ca.assign(evolution=evolution).sort_values("actuel", ascending=False)
+
+
+def jours_ouverts(journees, mois):
+    """Dates des journées commerciales du mois où la caisse a été ouverte, chacune une fois.
+
+    Une journée ouverte sans aucune vente compte : le magasin était ouvert.
+    """
+    jours = journees["ouverture"].dt.normalize()
+    return jours[mois_commercial(jours) == mois].drop_duplicates()
+
+
+def heure_de_journee(tickets):
+    """Heure de chaque ticket, comptée depuis le minuit qui commence sa journée commerciale.
+
+    Un ticket de 0 h 10 le lendemain donne 24 : il se range après 23 h, pas avant l'ouverture.
+    """
+    # Diviser un écart de temps par une heure donne un nombre d'heures ; // garde la partie entière.
+    return (tickets["date_heure"] - tickets["journee_commerciale"]) // pd.Timedelta(hours=1)
+
+
+def tickets_du_mois(tickets, paiements, mois):
+    """Tickets du mois avec leur canal, leur jour de la semaine (0 = lundi) et leur heure de journée."""
+    du_mois = canal_des_tickets(tickets[mois_commercial(tickets["journee_commerciale"]) == mois], paiements)
+    # dayofweek donne le jour de la semaine : 0 pour lundi, 6 pour dimanche.
+    return du_mois.assign(jour=du_mois["journee_commerciale"].dt.dayofweek, heure=heure_de_journee(du_mois))
+
+
+def resumer_rythme(du_mois, par):
+    """CA HT, tickets payants, et de quoi calculer le panier moyen du magasin, par jour ou par heure."""
+    payants = du_mois[du_mois["montant_ttc"] > 0]
+    magasin = payants[payants["canal"] == "magasin"]
+    # Les quatre séries sont alignées sur leur index ; un jour absent de l'une reçoit 0.
+    resume = pd.DataFrame({"ca_ht": du_mois.groupby(par)["montant_ht"].sum(),
+                           "tickets_payants": payants.groupby(par)["id_ticket"].count(),
+                           "ca_ttc_magasin": magasin.groupby(par)["montant_ttc"].sum(),
+                           "tickets_magasin": magasin.groupby(par)["id_ticket"].count()})
+    return resume.fillna(0).astype("int64")
+
+
+def ajouter_moyennes(resume, nombre_jours):
+    """Ajoute le CA HT et les tickets moyens par jour ouvert, et le panier moyen TTC du magasin.
+
+    Sans jour ouvert ou sans ticket, la moyenne reste vide : on ne divise pas par zéro.
+    "Int64" (avec une majuscule) est un entier qui accepte une valeur vide.
+    """
+    ca_par_jour = (resume["ca_ht"] / nombre_jours).round().astype("Int64")
+    panier = (resume["ca_ttc_magasin"] / resume["tickets_magasin"]).round().astype("Int64")
+    return resume.assign(jours_ouverts=nombre_jours, ca_ht_par_jour=ca_par_jour,
+                         tickets_par_jour=resume["tickets_payants"] / nombre_jours,
+                         panier_moyen_magasin=panier)
+
+
+def rythme_par_jour(tickets, paiements, journees, mois):
+    """Ventes d'un mois par jour de la semaine, de lundi (0) à dimanche (6), ramenées à un jour ouvert.
+
+    Un mois peut compter cinq samedis et quatre lundis : les totaux ne se comparent
+    pas, les moyennes par jour ouvert si. Un jour de la semaine jamais ouvert garde
+    sa ligne, avec des moyennes vides.
+    """
+    # value_counts compte les occurrences de chaque valeur : ici, le nombre de lundis ouverts, etc.
+    nombre = jours_ouverts(journees, mois).dt.dayofweek.value_counts().reindex(range(7), fill_value=0)
+    resume = resumer_rythme(tickets_du_mois(tickets, paiements, mois), "jour").reindex(range(7), fill_value=0)
+    return ajouter_moyennes(resume, nombre)
+
+
+def rythme_par_heure(tickets, paiements, journees, mois):
+    """Ventes d'un mois par heure de journée, ramenées à un jour ouvert.
+
+    Les heures après minuit valent 24, 25… (voir `heure_de_journee`). Les heures
+    sans vente entre la première et la dernière ont leur ligne, à 0.
+    """
+    resume = resumer_rythme(tickets_du_mois(tickets, paiements, mois), "heure")
+    if resume.empty:
+        return ajouter_moyennes(resume, 0)
+    resume = resume.reindex(range(resume.index.min(), resume.index.max() + 1), fill_value=0)
+    return ajouter_moyennes(resume, len(jours_ouverts(journees, mois)))
