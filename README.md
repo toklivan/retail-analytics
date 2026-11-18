@@ -2,7 +2,7 @@
 
 Un outil d'analyse et de pilotage pour un commerce d'alimentation de proximité. Il part des données que le commerce produit déjà (les ventes de la caisse, les factures des fournisseurs, le relevé bancaire) et les transforme en réponses concrètes : quels rayons font la marge, quand un fournisseur augmente ses prix, ce qui va manquer en rayon, ce que le mois a réellement rapporté.
 
-**État : en construction.** Les trois premières versions (v0.1.0 à v0.3.0) sont livrées. Ce qui fonctionne déjà est listé dans [État actuel](#état-actuel). Le reste est décrit dans la [feuille de route](ROADMAP.md).
+**État : en construction.** La phase 1 (v0.1.0 à v0.4.0), consacrée aux ventes, est livrée. Ce qui fonctionne déjà est listé dans [État actuel](#état-actuel). Le reste est décrit dans la [feuille de route](ROADMAP.md).
 
 ## Pourquoi ce projet
 
@@ -38,7 +38,7 @@ Le projet avance par phases. Chaque phase ajoute une source de données, et chaq
 
 | Phase | Source ajoutée | Ce que l'outil sait faire à la fin de la phase | Versions | État |
 |---|---|---|---|---|
-| 1. Comprendre les ventes | Exports de caisse | Chiffre d'affaires par rayon et par produit, classement ABC, comparaison mensuelle, analyse par jour et par heure, rapport mensuel | v0.1 à v0.4 | En cours |
+| 1. Comprendre les ventes | Exports de caisse | Chiffre d'affaires par rayon et par produit, classement ABC, comparaison mensuelle, analyse par jour et par heure, rapport mensuel | v0.1 à v0.4 | Livré |
 | 2. Le stock, les coûts et la marge | Inventaire, factures et tickets d'achat pris en photo | Stock par lots, coût réel de chaque vente (premier entré, premier sorti), marge par rayon, alertes de hausse avec prix de vente suggéré, distinction des promotions, démarque, alertes de rupture | v0.5 à v0.9 | Prévu |
 | 3. Piloter les finances | Relevé bancaire, livre de caisse | Tableau de pilotage mensuel : chiffre d'affaires, marge, charges, résultat estimé, trésorerie | v0.10 | Prévu |
 | 4. Devenir un produit | Connexion directe à la caisse | Tableau de bord, démo en ligne, ventes récupérées automatiquement | v1.0 à v1.2 | Prévu |
@@ -47,7 +47,7 @@ Chaque version est livrable, testée et taguée. Le détail version par version 
 
 ## État actuel
 
-Dernière version livrée : **v0.3.0, le rapport mensuel**.
+Dernière version livrée : **v0.4.0, le rythme du magasin**.
 
 - [x] Générateur de données fictives : ventes et journées de caisse de janvier à mi-octobre 2026, au format des exports de la caisse et avec leurs défauts
 - [x] Lecture et nettoyage des ventes : doublons entre exports retirés, articles offerts repérés, tickets d'après minuit rattachés à leur journée de caisse
@@ -56,6 +56,7 @@ Dernière version livrée : **v0.3.0, le rapport mensuel**.
 - [x] Indicateurs de vente par mois : chiffre d'affaires, tickets, panier moyen pour le magasin et la livraison, encaissements par moyen de paiement, articles offerts
 - [x] Détail d'un mois : chiffre d'affaires par rayon comparé au mois précédent, classement ABC des produits, mois incomplets signalés
 - [x] Rapport mensuel en une page HTML : chiffres clés et points à retenir, graphiques du chiffre d'affaires par mois, par rayon et des premiers produits, encaissements, articles offerts, fiabilité des données
+- [x] Rythme du magasin : chiffre d'affaires, tickets et panier moyen par jour de la semaine et par heure, ramenés à un jour ouvert, et carte de chaleur jour × heure dans le rapport mensuel
 - [x] Tests automatisés, dont un test qui vérifie que l'outil retrouve les défauts cachés dans le jeu fictif, et intégration continue
 
 ### Installation
@@ -104,7 +105,7 @@ Produire le rapport du dernier mois complet, en une page HTML :
 python -m retail_analytics rapport
 ```
 
-Le fichier `rapport_2026-09.html` est écrit à côté des exports. Il s'ouvre dans un navigateur, et s'imprime en PDF depuis celui-ci. Pour un autre mois, ajouter `--mois 2026-08`.
+Le fichier `rapport_2026-09.html` est écrit à côté des exports. Il s'ouvre dans un navigateur, et s'imprime en PDF depuis celui-ci. La section « Le rythme du magasin » y donne le meilleur jour, l'heure la plus forte et une carte de chaleur jour × heure. Pour un autre mois, ajouter `--mois 2026-08`.
 
 Lancer les tests :
 
