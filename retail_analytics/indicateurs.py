@@ -212,6 +212,12 @@ def ajouter_moyennes(resume, nombre_jours):
                          panier_moyen_magasin=panier)
 
 
+def ouvertures_par_jour(journees, mois):
+    """Nombre de journées ouvertes dans le mois pour chaque jour de la semaine, de lundi (0) à dimanche (6)."""
+    # value_counts compte les occurrences de chaque valeur : ici, le nombre de lundis ouverts, etc.
+    return jours_ouverts(journees, mois).dt.dayofweek.value_counts().reindex(range(7), fill_value=0)
+
+
 def rythme_par_jour(tickets, paiements, journees, mois):
     """Ventes d'un mois par jour de la semaine, de lundi (0) à dimanche (6), ramenées à un jour ouvert.
 
@@ -219,10 +225,8 @@ def rythme_par_jour(tickets, paiements, journees, mois):
     pas, les moyennes par jour ouvert si. Un jour de la semaine jamais ouvert garde
     sa ligne, avec des moyennes vides.
     """
-    # value_counts compte les occurrences de chaque valeur : ici, le nombre de lundis ouverts, etc.
-    nombre = jours_ouverts(journees, mois).dt.dayofweek.value_counts().reindex(range(7), fill_value=0)
     resume = resumer_rythme(tickets_du_mois(tickets, paiements, mois), "jour").reindex(range(7), fill_value=0)
-    return ajouter_moyennes(resume, nombre)
+    return ajouter_moyennes(resume, ouvertures_par_jour(journees, mois))
 
 
 def rythme_par_heure(tickets, paiements, journees, mois):
@@ -236,3 +240,22 @@ def rythme_par_heure(tickets, paiements, journees, mois):
         return ajouter_moyennes(resume, 0)
     resume = resume.reindex(range(resume.index.min(), resume.index.max() + 1), fill_value=0)
     return ajouter_moyennes(resume, len(jours_ouverts(journees, mois)))
+
+
+def ca_jour_heure(tickets, paiements, journees, mois):
+    """CA HT moyen par jour ouvert, en centimes : une ligne par jour de la semaine, une colonne par heure.
+
+    Chaque ligne est divisée par le nombre de journées ouvertes de ce jour-là :
+    la case « lundi 18 h » est ce que rapporte en moyenne un lundi entre 18 h et 19 h.
+    Un jour jamais ouvert a une ligne vide, différente d'une ligne à 0 €.
+    """
+    du_mois = tickets_du_mois(tickets, paiements, mois)
+    if du_mois.empty:
+        return pd.DataFrame()
+    # unstack fait passer les heures en colonnes ; une case sans vente reçoit 0.
+    ca = du_mois.groupby(["jour", "heure"])["montant_ht"].sum().unstack(fill_value=0)
+    heures = range(ca.columns.min(), ca.columns.max() + 1)
+    ca = ca.reindex(index=range(7), columns=heures, fill_value=0)
+    # div(..., axis=0) divise chaque ligne par la valeur qui lui correspond : le nombre de lundis, etc.
+    # Pour un jour jamais ouvert, 0 / 0 donne une case vide.
+    return ca.div(ouvertures_par_jour(journees, mois), axis=0).round()

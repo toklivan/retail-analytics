@@ -268,3 +268,29 @@ def test_rythme_d_un_mois_sans_vente():
     avril = pd.Period("2026-04")
     assert indicateurs.rythme_par_jour(tickets, paiements, journees, avril)["ca_ht"].sum() == 0
     assert indicateurs.rythme_par_heure(tickets, paiements, journees, avril).empty
+
+
+def test_ca_jour_heure():
+    table = indicateurs.ca_jour_heure(*tickets_sur_deux_lundis(), MARS)
+    assert list(table.index) == list(range(7))
+    assert list(table.columns) == list(range(10, 25))
+    # Lundi 10 h : 250 + 450 € HT sur deux lundis ouverts.
+    assert table.loc[0, 10] == 350
+    assert table.loc[0, 18] == 450
+    # Samedi à 0 h 30 : rangé à 24 h, sur un seul samedi ouvert.
+    assert table.loc[5, 24] == 700
+    # Mardi ouvert sans vente : 0 € ; dimanche jamais ouvert : vide.
+    assert table.loc[1].eq(0).all()
+    assert table.loc[6].isna().all()
+
+
+def test_ca_jour_heure_retrouve_le_rythme_par_jour():
+    tickets, paiements, journees = tickets_sur_deux_lundis()
+    table = indicateurs.ca_jour_heure(tickets, paiements, journees, MARS)
+    par_jour = indicateurs.rythme_par_jour(tickets, paiements, journees, MARS)
+    # La somme d'une ligne de la table est le CA moyen de ce jour de la semaine.
+    assert table.loc[0].sum() == par_jour.loc[0, "ca_ht_par_jour"]
+
+
+def test_ca_jour_heure_d_un_mois_sans_vente():
+    assert indicateurs.ca_jour_heure(*tickets_sur_deux_lundis(), pd.Period("2026-04")).empty
