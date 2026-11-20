@@ -56,15 +56,16 @@ Pas encore de marge : le coût d'achat saisi dans la caisse n'est pas fiable, et
 
 Sources : l'inventaire, puis les achats : factures et tickets pris en photo, factures électroniques, exports des fournisseurs.
 
-### v0.5.0 : l'inventaire (Prévu)
+### v0.5.0 : l'inventaire (Livré)
 
 > Qu'est-ce que j'ai en rayon, et combien ?
 
-- Import d'un comptage d'inventaire : code-barres, libellé, quantité
+- Import d'un comptage d'inventaire : code-barres et quantité, une ligne par scan
+- Saisie du comptage à la scanette, dans le terminal
 - Référentiel produits : chaque libellé de caisse relié à son code-barres et à son rayon
 - Liste des produits comptés jamais vendus, et des produits vendus jamais comptés
 
-Décision à prendre avant de commencer : le format de saisie de l'inventaire et la façon de relier le code-barres au libellé de caisse.
+Décision prise : deux fichiers séparés. Le comptage (`code_barres;quantite`) change à chaque inventaire ; le lien libellé ↔ code-barres, rangé dans la table de correspondance, se remplit une fois. Le libellé de caisse n'est jamais saisi pendant le comptage.
 
 ### v0.6.0 : les achats en photo (Prévu)
 
