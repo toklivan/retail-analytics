@@ -43,7 +43,7 @@ Pas encore de marge : le coût d'achat saisi dans la caisse n'est pas fiable, et
 - Graphiques par rayon et par produit
 - Rapport généré en une commande, lisible par un commerçant
 
-### v0.4.0 : le rythme du magasin (Prévu)
+### v0.4.0 : le rythme du magasin (Livré)
 
 > Quand se passe-t-il quelque chose ?
 

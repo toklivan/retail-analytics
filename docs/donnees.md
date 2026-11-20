@@ -473,6 +473,8 @@ Ces termes sont souvent confondus. Dans ce projet, ils ne le sont jamais.
 | Canal | « livraison » si le ticket est payé par une plateforme de livraison, « magasin » sinon |
 | Panier moyen | Chiffre d'affaires TTC / nombre de tickets payants, calculé séparément pour chaque canal |
 | Journée commerciale | Période entre l'ouverture et la fermeture de la caisse, qui peut dépasser minuit |
+| Heure de journée | Heure de clôture du ticket, comptée depuis le minuit qui commence sa journée commerciale : une vente à 0 h 30 vaut 24 et se range après 23 h |
+| Moyenne par jour ouvert | Total d'un jour de la semaine ou d'une heure, divisé par le nombre de journées commerciales ouvertes concernées ; une journée ouverte sans vente compte |
 | Article offert | Article sorti du magasin avec un montant encaissé nul ; il coûte sans rapporter |
 | Démarque connue | Coût des articles offerts et de la casse enregistrée |
 | Démarque inconnue | Stock théorique − stock compté à l'inventaire, valorisé au coût des lots |

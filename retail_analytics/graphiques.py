@@ -10,11 +10,12 @@ Une `Figure` créée directement est un objet Python ordinaire, libéré quand
 on ne s'en sert plus.
 """
 
+import matplotlib
 import pandas as pd
 from matplotlib.figure import Figure
 from matplotlib.ticker import FuncFormatter
 
-from retail_analytics.affichage import mois_fr, nombre
+from retail_analytics.affichage import NOMS_DES_JOURS, heure_fr, mois_fr, nombre
 
 # Le mois détaillé en couleur foncée, le reste en couleur claire.
 COULEUR_MOIS = "#1f4e79"
@@ -105,5 +106,30 @@ def premiers_produits(par_produit, nombre_produits=10):
     axe_en_euros(axe.xaxis)
     axe.set_title(f"Les {len(premiers)} premiers produits, CA HT")
     axe.spines[["top", "right"]].set_visible(False)
+    figure.tight_layout()
+    return figure
+
+
+def carte_de_chaleur(table):
+    """Carte de chaleur du CA HT moyen, jours de la semaine en lignes et heures en colonnes.
+
+    `table` est celle de `indicateurs.ca_jour_heure`. Plus la case est foncée,
+    plus l'heure rapporte. Une case vide (jour jamais ouvert) reste blanche,
+    pour ne pas être confondue avec 0 €.
+    """
+    figure = Figure(figsize=(8, 3.5))
+    axe = figure.add_subplot()
+    # Un dégradé d'une seule couleur, du clair (peu) au foncé (beaucoup).
+    # with_extremes(bad=...) fixe la couleur des cases vides.
+    couleurs = matplotlib.colormaps["Blues"].with_extremes(bad="white")
+    # imshow dessine un tableau de nombres comme une image, une case par valeur.
+    # aspect="auto" laisse les cases s'étirer pour remplir la figure.
+    image = axe.imshow(en_euros(table).to_numpy(dtype=float), cmap=couleurs, aspect="auto", vmin=0)
+    axe.set_yticks(range(len(table.index)), [NOMS_DES_JOURS[jour] for jour in table.index])
+    axe.set_xticks(range(len(table.columns)), [heure_fr(heure) for heure in table.columns], fontsize=8)
+    # La barre de couleur sert de légende : elle donne le montant de chaque nuance.
+    legende = figure.colorbar(image, ax=axe)
+    axe_en_euros(legende.ax.yaxis)
+    axe.set_title("Chiffre d'affaires HT moyen par jour et par heure")
     figure.tight_layout()
     return figure

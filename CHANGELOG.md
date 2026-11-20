@@ -4,6 +4,15 @@ Toutes les évolutions notables du projet sont consignées ici. Les numéros de 
 
 ## [Non publié]
 
+## [0.4.0] - 2026-11-18
+
+### Ajouté
+
+- Chiffre d'affaires HT, tickets payants et panier moyen du magasin par jour de la semaine et par heure, ramenés à un jour ouvert
+- Tableau et carte de chaleur du chiffre d'affaires HT moyen par jour de la semaine et par heure
+- Section « Le rythme du magasin » dans le rapport mensuel : meilleur jour, heure la plus forte, carte de chaleur et tableau par jour de la semaine
+- Une vente après minuit compte pour le jour de sa journée de caisse et se range après 23 h
+
 ## [0.3.0] - 2026-10-19
 
 ### Ajouté

@@ -14,9 +14,11 @@ import html
 import io
 from string import Template
 
+import pandas as pd
+
 from retail_analytics import graphiques, indicateurs, rayons
-from retail_analytics.affichage import (NOMS_MOYENS, date_fr, euros, evolution_fr, mois_fr, mois_long, nombre,
-                                        pourcentage)
+from retail_analytics.affichage import (NOMS_DES_JOURS, NOMS_MOYENS, date_fr, euros, evolution_fr, heure_fr, mois_fr,
+                                        mois_long, nombre, pourcentage)
 from retail_analytics.graphiques import nom_de_rayon
 
 # Squelette de la page. string.Template remplace chaque $nom par la valeur donnée à substitute.
@@ -235,6 +237,54 @@ def section_produits(par_produit, mois, nombre_affiches=20):
             + "</section>")
 
 
+def euros_ou_tiret(centimes):
+    """Montant en euros, ou « - » quand il est vide (jour jamais ouvert)."""
+    return "-" if pd.isna(centimes) else euros(int(centimes))
+
+
+def phrases_rythme(par_jour, par_heure):
+    """Le meilleur jour de la semaine et l'heure la plus forte, en CA HT moyen par jour ouvert.
+
+    `par_jour` et `par_heure` viennent de `indicateurs.rythme_par_jour` et
+    `rythme_par_heure`. idxmax ignore les moyennes vides des jours jamais ouverts.
+    """
+    phrases = []
+    if par_jour["ca_ht"].sum() > 0:
+        jour = par_jour["ca_ht_par_jour"].idxmax()
+        phrases.append(f"Meilleur jour : le {NOMS_DES_JOURS[jour]}, avec "
+                       f"{euros(int(par_jour.loc[jour, 'ca_ht_par_jour']))} HT en moyenne.")
+    if not par_heure.empty and par_heure["ca_ht"].sum() > 0:
+        heure = par_heure["ca_ht_par_jour"].idxmax()
+        phrases.append(f"Heure la plus forte : de {heure_fr(heure)} à {heure_fr(heure + 1)}, avec "
+                       f"{euros(int(par_heure.loc[heure, 'ca_ht_par_jour']))} HT en moyenne par jour ouvert.")
+    return phrases
+
+
+def section_rythme(tickets, paiements, journees, mois):
+    """Le rythme du magasin : phrases à retenir, carte de chaleur jour × heure, tableau par jour de la semaine."""
+    par_jour = indicateurs.rythme_par_jour(tickets, paiements, journees, mois)
+    par_heure = indicateurs.rythme_par_heure(tickets, paiements, journees, mois)
+    liste = "".join(f"<li>{html.escape(phrase)}</li>" for phrase in phrases_rythme(par_jour, par_heure))
+    lignes = [[NOMS_DES_JOURS[jour].capitalize(), nombre(ligne.jours_ouverts), euros_ou_tiret(ligne.ca_ht_par_jour),
+               "-" if pd.isna(ligne.tickets_par_jour) else nombre(round(ligne.tickets_par_jour)),
+               euros_ou_tiret(ligne.panier_moyen_magasin)]
+              for jour, ligne in zip(par_jour.index, par_jour.itertuples())]
+    carte = indicateurs.ca_jour_heure(tickets, paiements, journees, mois)
+    return ("<section><h2>Le rythme du magasin</h2>"
+            f"<ul>{liste}</ul>"
+            + image(graphiques.carte_de_chaleur(carte), "Chiffre d'affaires HT moyen par jour et par heure")
+            + paragraphe("Chaque case donne ce que rapporte en moyenne cette heure-là, ce jour-là : la case "
+                         "« samedi 18 h » couvre les ventes de 18 h à 19 h. Plus elle est foncée, plus l'heure "
+                         "rapporte. Une ligne blanche est un jour où le magasin n'a pas ouvert.", "note")
+            + tableau(["Jour", "Jours ouverts", "CA HT moyen", "Tickets par jour", "Panier moyen magasin TTC"],
+                      lignes, nombres=(1, 2, 3, 4))
+            + paragraphe("Les moyennes sont calculées par jour ouvert : un mois à cinq samedis et quatre lundis "
+                         "se compare ainsi sans biais. Une vente après minuit compte pour la journée de caisse "
+                         "commencée la veille. Le panier moyen ne compte que les tickets du magasin, "
+                         "sans la livraison.", "note")
+            + "</section>")
+
+
 def section_encaissements(paiements, tickets, mois):
     """Encaissements TTC par moyen de paiement, et panier moyen du magasin et de la livraison."""
     moyens = indicateurs.ventes_par_moyen(paiements, tickets).loc[mois]
@@ -304,6 +354,7 @@ def construire_rapport(propres, resultats, mois, complets, etabli_le):
                                    points_a_retenir(comparaison, par_produit, mois, comparable))
                + section_rayons(par_rayon, comparaison, mois, comparable)
                + section_produits(par_produit, mois)
+               + section_rythme(tickets, propres["paiements"], propres["journees"], mois)
                + section_encaissements(propres["paiements"], tickets, mois)
                + section_offerts(ventes, mois)
                + section_fiabilite(ventes_du_mois, resultats))

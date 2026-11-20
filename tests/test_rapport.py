@@ -133,3 +133,21 @@ def test_la_classe_a_est_limitee_et_le_reste_resume():
     assert "Pastis 70cl" in section.split("<h3>Les premiers")[1]
     assert "Vodka 70cl" not in section.split("<h3>Les premiers")[1]
     assert "Et 1 autre(s) produit(s) en classe A, qui font 10,0 % du CA HT." in section
+
+
+def test_phrases_rythme():
+    par_jour = pd.DataFrame({"ca_ht": [1600, 0, 0, 0, 0, 700, 0],
+                             "ca_ht_par_jour": pd.array([800, 0, 0, 0, 0, 700, None], dtype="Int64")})
+    par_heure = pd.DataFrame({"ca_ht": [700, 1600], "ca_ht_par_jour": pd.array([175, 400], dtype="Int64")},
+                             index=[10, 23])
+    assert rapport.phrases_rythme(par_jour, par_heure) == [
+        "Meilleur jour : le lundi, avec 8,00 € HT en moyenne.",
+        "Heure la plus forte : de 23 h à 0 h, avec 4,00 € HT en moyenne par jour ouvert.",
+    ]
+
+
+def test_le_rapport_contient_le_rythme_du_magasin(propres):
+    page = construire(propres)
+    assert "Le rythme du magasin" in page
+    # Le 2 mars 2026 est un lundi : un seul lundi ouvert, 8,99 € HT.
+    assert "Meilleur jour : le lundi, avec 8,99 € HT en moyenne." in page
