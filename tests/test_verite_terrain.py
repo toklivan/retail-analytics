@@ -3,17 +3,30 @@
 import pandas as pd
 import pytest
 
-from retail_analytics import generateur, indicateurs, rayons
+from retail_analytics import generateur, indicateurs, inventaire, rayons
 from retail_analytics.__main__ import preparer
 
 
 @pytest.fixture(scope="module")
-def jeu(tmp_path_factory):
+def genere(tmp_path_factory):
     # scope="module" : le jeu est généré une seule fois pour tous les tests de ce fichier.
     dossier = tmp_path_factory.mktemp("fictif")
     verite = generateur.generer(dossier, tmp_path_factory.mktemp("exemple"))
+    return dossier, verite
+
+
+@pytest.fixture(scope="module")
+def jeu(genere):
+    dossier, verite = genere
     propres, resultats = preparer(dossier / "sumup", dossier / "correspondances.csv")
     return verite, propres, resultats
+
+
+@pytest.fixture(scope="module")
+def comptage(genere):
+    dossier, verite = genere
+    verite = verite["inventaire"]
+    return verite, inventaire.lire_inventaire(dossier / f"inventaire-{verite['date']}.csv")
 
 
 def test_retrouve_les_tickets_les_lignes_et_le_ca(jeu):
@@ -77,3 +90,15 @@ def test_seul_le_dernier_mois_est_incomplet(jeu):
     debut, fin = (pd.Period(jour, freq="M") for jour in verite["periode"])
     assert list(complets.index) == list(pd.period_range(debut, fin, freq="M"))
     assert list(complets[~complets].index) == [fin]
+
+
+def test_retrouve_les_lignes_fautives_de_l_inventaire(comptage):
+    verite, lignes = comptage
+    assert len(lignes) == verite["nombre_lignes"]
+    rejetees = inventaire.lignes_rejetees(lignes)
+    assert sorted(rejetees[["code_barres", "quantite"]].values.tolist()) == sorted(verite["lignes_rejetees"])
+
+
+def test_retrouve_le_nombre_d_unites_comptees(comptage):
+    verite, lignes = comptage
+    assert inventaire.stock_compte(lignes)["quantite_comptee"].sum() == verite["unites_comptees"]

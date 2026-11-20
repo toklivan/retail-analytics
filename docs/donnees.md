@@ -170,6 +170,8 @@ En v0.5, c'est un fichier `libelle;rayon;code_barres` maintenu à la main ; la c
 
 `date_inventaire`, `code_barres`, `libelle`, `quantite_comptee`.
 
+Le fichier saisi s'appelle `inventaire-AAAA-MM-JJ.csv` et ne contient que `code_barres;quantite`, une ligne par scan : le libellé vient du référentiel, la date du nom du fichier. Un code qui revient (rayon puis réserve) voit ses quantités additionnées. Une ligne au code-barres invalide ou à la quantité illisible (négative, décimale, « 1O ») est écartée et signalée ; une quantité de 0 est gardée.
+
 ### `achats` (v0.6) : une ligne par document d'achat
 
 | Colonne | Contenu |
@@ -449,6 +451,10 @@ En v0.1 : un magasin fictif (« Épicerie Exemple »), du 1er janvier au 14 octo
 - des codes-barres fictifs commençant par 20, préfixe réservé à l'usage interne d'un magasin, pour ne jamais tomber sur un vrai produit, avec une clé de contrôle valide
 - à partir de la v0.6 : des livraisons régulières avec colisage, des hausses de prix, des promotions fournisseurs, des gratuités, et parfois une vente avant la saisie de la facture correspondante
 
+**L'inventaire (v0.5)**
+
+Un comptage au 14/10/2026, avec les pièges d'un vrai comptage : des produits comptés en rayon puis en réserve, quelques produits vendus mais pas comptés, deux nouveautés au référentiel jamais vendues, un code-barres inconnu, une mauvaise lecture (clé fausse) et une faute de frappe dans une quantité. Il a son propre tirage au hasard : le modifier ne change pas les ventes.
+
 **Une vérité terrain**
 
 Le générateur connaît le coût réel de chaque unité vendue, puisqu'il invente les livraisons et les ventes. Le moteur PEPS doit retrouver exactement ces coûts : c'est son test principal.
@@ -508,3 +514,4 @@ Prix de vente suggéré pour un taux de marque cible : prix HT = coût HT / (1 �
 - En v0.1, le taux de TVA de chaque produit n'est pas encore déduit des ventes : la table `produits` se limite au libellé et au rayon.
 - Le rapport mensuel est une page HTML. Le PDF s'obtient en l'imprimant depuis le navigateur, il n'est pas généré par l'outil.
 - Les points à retenir du rapport suivent trois règles fixes (rayon qui progresse le plus en euros, rayon qui recule le plus, produit n°1). Ils ne repèrent pas un phénomène que ces règles ne couvrent pas, comme un produit qui décroche dans un rayon stable.
+- En v0.5, les quantités de l'inventaire fictif sont inventées, sans lien avec les ventes ni avec des livraisons. Elles deviendront cohérentes en v0.7, quand le générateur inventera les livraisons.

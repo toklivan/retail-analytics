@@ -15,7 +15,7 @@ from datetime import date, datetime, time, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
-from retail_analytics.catalogue import SAISONS, lister_produits
+from retail_analytics.catalogue import SAISONS, code_barres_fictif, lister_produits
 
 GRAINE = 2026
 DEBUT = date(2026, 1, 1)
@@ -24,6 +24,11 @@ JOURS_FERMES = {date(2026, 1, 1), date(2026, 5, 1), date(2026, 7, 14), date(2026
 JOUR_PANNE = date(2026, 3, 17)
 SEMAINE_EXEMPLE = (date(2026, 6, 8), date(2026, 6, 14))
 NOMBRE_LIBELLES_INCONNUS = 5
+DATE_INVENTAIRE = FIN
+# Produits arrivés au référentiel et en rayon, mais encore jamais vendus.
+NOUVEAUTES = [("Sauce pesto 190g", "Épicerie salée"), ("Kombucha gingembre 33cl", "Boissons")]
+NOMBRE_NON_COMPTES = 4
+NOMBRE_COMPTES_EN_RESERVE = 10
 
 MAGASIN = "Épicerie Exemple"
 ID_MAGASIN = "10000"
@@ -262,6 +267,62 @@ def ecrire_correspondances(chemin, produits, inconnus):
     chemin.write_text("\n".join(lignes) + "\n", encoding="utf-8")
 
 
+# --- Inventaire -------------------------------------------------------------
+
+def lister_nouveautes(produits):
+    """Les nouveautés, avec des codes-barres numérotés après ceux du catalogue."""
+    return [{"libelle": libelle, "rayon": rayon, "code_barres": code_barres_fictif(len(produits) + i)}
+            for i, (libelle, rayon) in enumerate(NOUVEAUTES, start=1)]
+
+
+def compter_inventaire(rng, produits):
+    """Lignes (code-barres, quantité) d'un comptage fictif, et la liste de ses pièges.
+
+    Comme un vrai comptage : des produits oubliés ou en rupture, d'autres comptés
+    une seconde fois en réserve, un code inconnu, une mauvaise lecture et une
+    faute de frappe. Les quantités sont en texte, comme dans le fichier.
+    """
+    scannables = [p for p in produits if p["code_barres"]]
+    non_comptes = rng.sample(scannables, NOMBRE_NON_COMPTES)
+    comptes = [p for p in scannables if p not in non_comptes]
+    # Un produit populaire a plus d'unités en rayon ; une nouveauté compte comme peu populaire.
+    lignes = [(p["code_barres"], str(rng.randint(1, 3 * p.get("popularite", 1) + 2))) for p in comptes]
+    lignes += [(p["code_barres"], str(rng.randint(2, 12))) for p in rng.sample(comptes, NOMBRE_COMPTES_EN_RESERVE)]
+    code_inconnu = code_barres_fictif(999)
+    lu = rng.choice(comptes)["code_barres"]
+    mal_lu = lu[:-1] + str((int(lu[-1]) + 1) % 10)
+    fautives = [(mal_lu, "2"), (rng.choice(comptes)["code_barres"], "1O")]
+    for ligne in [(code_inconnu, "3")] + fautives:
+        lignes.insert(rng.randrange(len(lignes)), ligne)
+    pieges = {"non_comptes": [p["libelle"] for p in non_comptes], "code_inconnu": code_inconnu,
+              "lignes_fautives": [list(ligne) for ligne in fautives]}
+    return lignes, pieges
+
+
+def ecrire_inventaire(dossier, jour, lignes):
+    """Écrit le comptage, nommé par sa date comme `inventaire-2026-10-14.csv`."""
+    texte = "\n".join(["code_barres;quantite"] + [f"{code};{quantite}" for code, quantite in lignes])
+    (dossier / f"inventaire-{jour.isoformat()}.csv").write_text(texte + "\n", encoding="utf-8")
+
+
+def verite_inventaire(lignes, pieges, produits, inconnus, vendus):
+    """Ce que l'outil doit retrouver dans l'inventaire fictif."""
+    fautives = [tuple(ligne) for ligne in pieges["lignes_fautives"]]
+    valides = [(code, int(quantite)) for code, quantite in lignes if (code, quantite) not in fautives]
+    # Les codes connus sont ceux écrits dans la table de correspondance, d'où manquent les libellés inconnus.
+    libelles = {p["code_barres"]: p["libelle"] for p in produits if p["code_barres"] and p["libelle"] not in inconnus}
+    comptes = {libelles[code] for code, _ in valides if code in libelles}
+    return {
+        "date": DATE_INVENTAIRE.isoformat(),
+        "nombre_lignes": len(lignes),
+        "lignes_rejetees": pieges["lignes_fautives"],
+        "unites_comptees": sum(quantite for _, quantite in valides),
+        "codes_inconnus": sorted({code for code, _ in valides if code not in libelles}),
+        "comptes_jamais_vendus": sorted(l for l in comptes if l not in vendus),
+        "vendus_jamais_comptes": sorted(l for l in pieges["non_comptes"] if l in vendus and l not in inconnus),
+    }
+
+
 # --- Vérité terrain ---------------------------------------------------------
 
 def verite_terrain(journees, periodes, inconnus):
@@ -303,15 +364,22 @@ def generer(dossier_fictif=Path("data/fictif"), dossier_exemple=Path("data/exemp
     journees = simuler_magasin(rng, produits)
     candidats = [p["libelle"] for p in produits if p["prix_ttc"] is not None]
     inconnus = rng.sample(candidats, NOMBRE_LIBELLES_INCONNUS)
+    # L'inventaire a son propre tirage : le modifier ne change pas les ventes.
+    referentiel = produits + lister_nouveautes(produits)
+    comptage, pieges = compter_inventaire(random.Random(GRAINE + 1), referentiel)
 
     periodes = periodes_mensuelles()
     for debut, fin in periodes:
         ecrire_export(dossier_fictif / "sumup", journees, debut, fin)
-    ecrire_correspondances(dossier_fictif / "correspondances.csv", produits, inconnus)
+    ecrire_correspondances(dossier_fictif / "correspondances.csv", referentiel, inconnus)
+    ecrire_inventaire(dossier_fictif, DATE_INVENTAIRE, comptage)
     verite = verite_terrain(journees, periodes, inconnus)
+    vendus = {l["libelle"] for j in journees for t in j["tickets"] for l in t["lignes"]}
+    verite["inventaire"] = verite_inventaire(comptage, pieges, referentiel, inconnus, vendus)
     texte = json.dumps(verite, indent=2, ensure_ascii=False) + "\n"
     (dossier_fictif / "verite_terrain.json").write_text(texte, encoding="utf-8")
 
     ecrire_export(dossier_exemple / "sumup", journees, *SEMAINE_EXEMPLE)
-    ecrire_correspondances(dossier_exemple / "correspondances.csv", produits, inconnus)
+    ecrire_correspondances(dossier_exemple / "correspondances.csv", referentiel, inconnus)
+    ecrire_inventaire(dossier_exemple, SEMAINE_EXEMPLE[1], comptage)
     return verite
