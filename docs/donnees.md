@@ -517,3 +517,4 @@ Prix de vente suggéré pour un taux de marque cible : prix HT = coût HT / (1 �
 - En v0.5, les quantités de l'inventaire fictif sont inventées, sans lien avec les ventes ni avec des livraisons. Elles deviendront cohérentes en v0.7, quand le générateur inventera les livraisons.
 - Les produits sans code-barres (pain, fruits à la pièce, touches libres) ne peuvent pas être comptés à la scanette en v0.5 : ils sont listés à part, sans stock.
 - La liste des produits vendus jamais comptés compare l'inventaire à toutes les ventes chargées jusqu'à sa date. Un produit arrêté depuis des mois y figure encore ; son chiffre d'affaires, affiché à côté, permet de le repérer.
+- La saisie à la scanette (`compter`) n'a pas de touche pour annuler la dernière ligne : une erreur se corrige en modifiant le fichier `inventaire-AAAA-MM-JJ.csv`, un simple CSV.

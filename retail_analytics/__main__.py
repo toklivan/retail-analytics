@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from retail_analytics import controles, generateur, indicateurs, inventaire, nettoyage, rapport, rayons, sumup
+from retail_analytics import comptage, controles, generateur, indicateurs, inventaire, nettoyage, rapport, rayons, sumup
 from retail_analytics.affichage import NOMS_MOYENS, date_fr, euros, evolution_fr, mois_fr, nombre, pourcentage
 
 
@@ -228,6 +228,16 @@ def commande_inventaire(args):
     print(f"Stock compté écrit dans {sortie}")
 
 
+def commande_compter(args):
+    dossier = Path(args.dossier)
+    correspondances = rayons.lire_correspondances(Path(args.correspondances or dossier / "correspondances.csv"))
+    libelles = inventaire.libelles_par_code(correspondances).set_index("code_barres")["libelle"].to_dict()
+    chemin = dossier / f"inventaire-{pd.Timestamp.today().date().isoformat()}.csv"
+    print(f"Comptage enregistré au fur et à mesure dans {chemin}")
+    enregistrees = comptage.compter(chemin, libelles)
+    print(f"{nombre(enregistrees)} ligne(s) ajoutée(s). Rapprochement avec la commande inventaire.")
+
+
 def main():
     # argparse lit les arguments de la ligne de commande et génère l'aide (--help).
     parseur = argparse.ArgumentParser(prog="retail_analytics")
@@ -262,6 +272,11 @@ def main():
     compter_stock.add_argument("--correspondances", help="table libellé;rayon;code_barres (par défaut, à côté des exports)")
     compter_stock.add_argument("--inventaire", help="fichier inventaire-AAAA-MM-JJ.csv (par défaut, le plus récent à côté des exports)")
     compter_stock.set_defaults(fonction=commande_inventaire)
+
+    scanner = commandes.add_parser("compter", help="saisit un inventaire à la scanette")
+    scanner.add_argument("--dossier", default="data/fictif", help="dossier où écrire inventaire-AAAA-MM-JJ.csv")
+    scanner.add_argument("--correspondances", help="table libellé;rayon;code_barres (par défaut, dans le dossier)")
+    scanner.set_defaults(fonction=commande_compter)
 
     args = parseur.parse_args()
     args.fonction(args)
