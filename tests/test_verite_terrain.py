@@ -102,3 +102,32 @@ def test_retrouve_les_lignes_fautives_de_l_inventaire(comptage):
 def test_retrouve_le_nombre_d_unites_comptees(comptage):
     verite, lignes = comptage
     assert inventaire.stock_compte(lignes)["quantite_comptee"].sum() == verite["unites_comptees"]
+
+
+@pytest.fixture(scope="module")
+def rapprochement(genere, jeu, comptage):
+    dossier, _ = genere
+    _, propres, _ = jeu
+    verite, lignes = comptage
+    correspondances = rayons.lire_correspondances(dossier / "correspondances.csv")
+    stock = inventaire.stock_compte(lignes)
+    ventes = inventaire.ventes_jusqu_a(propres["ventes"], pd.Timestamp(verite["date"]))
+    return verite, correspondances, stock, ventes
+
+
+def test_retrouve_les_codes_inconnus_de_l_inventaire(rapprochement):
+    verite, correspondances, stock, _ = rapprochement
+    rattache = inventaire.stock_rattache(stock, correspondances)
+    assert sorted(inventaire.codes_inconnus(rattache)["code_barres"]) == verite["codes_inconnus"]
+
+
+def test_retrouve_les_produits_comptes_jamais_vendus(rapprochement):
+    verite, correspondances, stock, ventes = rapprochement
+    rattache = inventaire.stock_rattache(stock, correspondances)
+    jamais_vendus = inventaire.comptes_jamais_vendus(rattache, ventes, correspondances)
+    assert sorted(jamais_vendus["libelle"]) == verite["comptes_jamais_vendus"]
+
+
+def test_retrouve_les_produits_vendus_jamais_comptes(rapprochement):
+    verite, correspondances, stock, ventes = rapprochement
+    assert sorted(inventaire.vendus_jamais_comptes(ventes, correspondances, stock)["libelle"]) == verite["vendus_jamais_comptes"]

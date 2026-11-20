@@ -515,3 +515,5 @@ Prix de vente suggéré pour un taux de marque cible : prix HT = coût HT / (1 �
 - Le rapport mensuel est une page HTML. Le PDF s'obtient en l'imprimant depuis le navigateur, il n'est pas généré par l'outil.
 - Les points à retenir du rapport suivent trois règles fixes (rayon qui progresse le plus en euros, rayon qui recule le plus, produit n°1). Ils ne repèrent pas un phénomène que ces règles ne couvrent pas, comme un produit qui décroche dans un rayon stable.
 - En v0.5, les quantités de l'inventaire fictif sont inventées, sans lien avec les ventes ni avec des livraisons. Elles deviendront cohérentes en v0.7, quand le générateur inventera les livraisons.
+- Les produits sans code-barres (pain, fruits à la pièce, touches libres) ne peuvent pas être comptés à la scanette en v0.5 : ils sont listés à part, sans stock.
+- La liste des produits vendus jamais comptés compare l'inventaire à toutes les ventes chargées jusqu'à sa date. Un produit arrêté depuis des mois y figure encore ; son chiffre d'affaires, affiché à côté, permet de le repérer.
