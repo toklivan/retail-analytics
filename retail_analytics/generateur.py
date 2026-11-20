@@ -256,8 +256,9 @@ def periodes_mensuelles():
 
 
 def ecrire_correspondances(chemin, produits, inconnus):
-    """Table libellé -> rayon, où manquent volontairement quelques libellés."""
-    lignes = ["libelle;rayon"] + [f"{p['libelle']};{p['rayon']}" for p in produits if p["libelle"] not in inconnus]
+    """Table libellé -> rayon et code-barres, où manquent volontairement quelques libellés."""
+    lignes = ["libelle;rayon;code_barres"] + [f"{p['libelle']};{p['rayon']};{p['code_barres'] or ''}"
+                                              for p in produits if p["libelle"] not in inconnus]
     chemin.write_text("\n".join(lignes) + "\n", encoding="utf-8")
 
 

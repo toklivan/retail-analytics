@@ -158,11 +158,13 @@ Le modèle complet est défini dès le départ, mais chaque table n'est construi
 | `libelle` | Nom du produit à la caisse, clé des ventes |
 | `rayon` | Rayon de rattachement, par la table de correspondance |
 | `taux_tva` | Déduit des ventes cumulées, ramené au taux légal |
-| `code_barres` | EAN-13, renseigné par l'inventaire en v0.5 ; vide pour un produit sans code-barres |
+| `code_barres` | EAN-13 (ou EAN-8 sur les petits articles), renseigné dans la table de correspondance en v0.5 ; vide pour un produit sans code-barres |
 
 ### `correspondances` (v0.1, étendue en v0.5 et v0.6)
 
 Relie un libellé de caisse, un code-barres ou une référence fournisseur à un produit et à un rayon. Elle s'enrichit au fil du temps : tout libellé inconnu est listé pour être rattaché à la main, jamais deviné.
+
+En v0.5, c'est un fichier `libelle;rayon;code_barres` maintenu à la main ; la colonne `code_barres` est facultative et vide pour un produit sans code-barres. Un libellé a un seul rayon ; un code-barres aussi. Un libellé peut avoir plusieurs codes-barres (le produit a changé d'EAN), un code-barres plusieurs libellés (le produit a été renommé en caisse). Un code-barres dont la clé de contrôle est fausse est refusé.
 
 ### `inventaires` (v0.5)
 

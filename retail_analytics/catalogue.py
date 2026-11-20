@@ -3,7 +3,12 @@
 Tous les produits sont inventés et génériques (aucune marque).
 Chaque rayon a un taux de TVA par défaut et une saisonnalité ; un produit
 peut porter son propre taux quand il diffère de celui du rayon.
+
+Les codes-barres commencent par 20, préfixe réservé à l'usage interne d'un
+magasin : ils ne peuvent pas désigner un vrai produit.
 """
+
+from retail_analytics.codes_barres import cle_ean
 
 TVA_REDUITE = 0.055   # alimentation, boissons sans alcool
 TVA_INTERMEDIAIRE = 0.10   # plats et sandwichs à emporter
@@ -113,11 +118,23 @@ RAYONS = {
 }
 
 
+# Produits vendus sans emballage, donc sans code-barres : touches libres, pain, fruits à la pièce, café.
+SANS_CODE_BARRES = {"Fruits et légumes vrac", "Divers 20 %", "Baguette", "Baguette tradition", "Croissant",
+                    "Pain au chocolat", "Bananes", "Avocat", "Citron", "Ail tête", "Café à emporter"}
+
+
+def code_barres_fictif(numero):
+    """EAN-13 fictif : 20, le numéro sur 10 chiffres, puis la clé de contrôle."""
+    chiffres = f"20{numero:010d}"
+    return chiffres + cle_ean(chiffres)
+
+
 def lister_produits():
     """Rend la liste des produits, un dictionnaire par produit."""
     produits = []
     for rayon, (taux_rayon, saison, articles) in RAYONS.items():
         for article in articles:
+            numero = len(produits) + 1
             libelle, prix, popularite = article[:3]
             # Un quatrième élément, s'il existe, remplace le taux du rayon.
             taux = article[3] if len(article) > 3 else taux_rayon
@@ -128,5 +145,6 @@ def lister_produits():
                 "taux_tva": taux,
                 "popularite": popularite,
                 "saison": saison,
+                "code_barres": None if libelle in SANS_CODE_BARRES else code_barres_fictif(numero),
             })
     return produits
