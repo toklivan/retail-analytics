@@ -2,7 +2,7 @@
 
 Un outil d'analyse et de pilotage pour un commerce d'alimentation de proximité. Il part des données que le commerce produit déjà (les ventes de la caisse, les factures des fournisseurs, le relevé bancaire) et les transforme en réponses concrètes : quels rayons font la marge, quand un fournisseur augmente ses prix, ce qui va manquer en rayon, ce que le mois a réellement rapporté.
 
-**État : en construction.** La phase 1 (v0.1.0 à v0.4.0), consacrée aux ventes, est livrée. Ce qui fonctionne déjà est listé dans [État actuel](#état-actuel). Le reste est décrit dans la [feuille de route](ROADMAP.md).
+**État : en construction.** La phase 1 (v0.1.0 à v0.4.0), consacrée aux ventes, est livrée. La phase 2 a commencé avec l'inventaire (v0.5.0). Ce qui fonctionne déjà est listé dans [État actuel](#état-actuel). Le reste est décrit dans la [feuille de route](ROADMAP.md).
 
 ## Pourquoi ce projet
 
@@ -39,7 +39,7 @@ Le projet avance par phases. Chaque phase ajoute une source de données, et chaq
 | Phase | Source ajoutée | Ce que l'outil sait faire à la fin de la phase | Versions | État |
 |---|---|---|---|---|
 | 1. Comprendre les ventes | Exports de caisse | Chiffre d'affaires par rayon et par produit, classement ABC, comparaison mensuelle, analyse par jour et par heure, rapport mensuel | v0.1 à v0.4 | Livré |
-| 2. Le stock, les coûts et la marge | Inventaire, factures et tickets d'achat pris en photo | Stock par lots, coût réel de chaque vente (premier entré, premier sorti), marge par rayon, alertes de hausse avec prix de vente suggéré, distinction des promotions, démarque, alertes de rupture | v0.5 à v0.9 | Prévu |
+| 2. Le stock, les coûts et la marge | Inventaire, factures et tickets d'achat pris en photo | Stock par lots, coût réel de chaque vente (premier entré, premier sorti), marge par rayon, alertes de hausse avec prix de vente suggéré, distinction des promotions, démarque, alertes de rupture | v0.5 à v0.9 | En cours (v0.5 livrée) |
 | 3. Piloter les finances | Relevé bancaire, livre de caisse | Tableau de pilotage mensuel : chiffre d'affaires, marge, charges, résultat estimé, trésorerie | v0.10 | Prévu |
 | 4. Devenir un produit | Connexion directe à la caisse | Tableau de bord, démo en ligne, ventes récupérées automatiquement | v1.0 à v1.2 | Prévu |
 
@@ -47,7 +47,7 @@ Chaque version est livrable, testée et taguée. Le détail version par version 
 
 ## État actuel
 
-Dernière version livrée : **v0.4.0, le rythme du magasin**.
+Dernière version livrée : **v0.5.0, l'inventaire**.
 
 - [x] Générateur de données fictives : ventes et journées de caisse de janvier à mi-octobre 2026, au format des exports de la caisse et avec leurs défauts
 - [x] Lecture et nettoyage des ventes : doublons entre exports retirés, articles offerts repérés, tickets d'après minuit rattachés à leur journée de caisse
@@ -57,6 +57,9 @@ Dernière version livrée : **v0.4.0, le rythme du magasin**.
 - [x] Détail d'un mois : chiffre d'affaires par rayon comparé au mois précédent, classement ABC des produits, mois incomplets signalés
 - [x] Rapport mensuel en une page HTML : chiffres clés et points à retenir, graphiques du chiffre d'affaires par mois, par rayon et des premiers produits, encaissements, articles offerts, fiabilité des données
 - [x] Rythme du magasin : chiffre d'affaires, tickets et panier moyen par jour de la semaine et par heure, ramenés à un jour ouvert, et carte de chaleur jour × heure dans le rapport mensuel
+- [x] Référentiel produits : chaque libellé de caisse relié à son rayon et à son code-barres, avec vérification de la clé de contrôle
+- [x] Inventaire : saisie à la scanette dans le terminal, ou lecture d'un fichier de comptage ; lignes fautives écartées et signalées, rayon et réserve additionnés
+- [x] Rapprochement de l'inventaire et des ventes : stock compté par rayon, codes-barres inconnus, produits comptés jamais vendus, produits vendus jamais comptés
 - [x] Tests automatisés, dont un test qui vérifie que l'outil retrouve les défauts cachés dans le jeu fictif, et intégration continue
 
 ### Installation
@@ -107,6 +110,22 @@ python -m retail_analytics rapport
 
 Le fichier `rapport_2026-09.html` est écrit à côté des exports. Il s'ouvre dans un navigateur, et s'imprime en PDF depuis celui-ci. La section « Le rythme du magasin » y donne le meilleur jour, l'heure la plus forte et une carte de chaleur jour × heure. Pour un autre mois, ajouter `--mois 2026-08`.
 
+Rapprocher le dernier inventaire du référentiel et des ventes :
+
+```
+python -m retail_analytics inventaire
+```
+
+La commande lit le fichier `inventaire-AAAA-MM-JJ.csv` le plus récent à côté des exports (`code_barres;quantite`, une ligne par scan) et la table `correspondances.csv` (`libelle;rayon;code_barres`). Elle affiche le stock compté par rayon et les listes à traiter, puis écrit le stock complet dans `stock-AAAA-MM-JJ.csv`.
+
+Saisir un inventaire à la scanette, dans un dossier choisi :
+
+```
+python -m retail_analytics compter --dossier data/raw
+```
+
+Une scanette USB ou Bluetooth se comporte comme un clavier : chaque scan affiche le libellé du produit, puis la quantité se tape au clavier (Entrée seule pour 1). Chaque ligne est écrite aussitôt dans `inventaire-AAAA-MM-JJ.csv` ; relancer la commande le même jour complète le fichier. Une ligne vide termine la saisie.
+
 Lancer les tests :
 
 ```
@@ -115,7 +134,7 @@ python -m pytest
 
 ## Données
 
-Les données réelles d'un commerce ne sont jamais publiées. Le dépôt utilise uniquement un jeu de données fictif, produit par un script qui reproduit la structure d'un vrai export de caisse, ses défauts et les phénomènes du métier : saisonnalité par rayon, heures de pointe, jours plus chargés que d'autres. Les promotions et les hausses de prix fournisseurs arriveront avec les achats (v0.6). Les produits, prix et quantités sont inventés.
+Les données réelles d'un commerce ne sont jamais publiées. Le dépôt utilise uniquement un jeu de données fictif, produit par un script qui reproduit la structure d'un vrai export de caisse, ses défauts et les phénomènes du métier : saisonnalité par rayon, heures de pointe, jours plus chargés que d'autres. Il produit aussi un inventaire avec les pièges d'un vrai comptage. Les codes-barres commencent par 20, préfixe réservé à l'usage interne d'un magasin : ils ne désignent aucun vrai produit. Les promotions et les hausses de prix fournisseurs arriveront avec les achats (v0.6). Les produits, prix et quantités sont inventés.
 
 La stratégie complète est décrite dans [docs/donnees.md](docs/donnees.md).
 

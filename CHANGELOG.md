@@ -4,6 +4,17 @@ Toutes les évolutions notables du projet sont consignées ici. Les numéros de 
 
 ## [Non publié]
 
+## [0.5.0] - 2026-11-20
+
+### Ajouté
+
+- Colonne `code_barres` dans la table de correspondance, facultative ; vérification de la clé de contrôle des EAN-13 et EAN-8
+- Un code-barres rangé dans deux rayons est refusé ; un produit renommé en caisse ou qui change de code-barres est accepté
+- Lecture d'un comptage `inventaire-AAAA-MM-JJ.csv` : lignes fautives écartées et signalées, quantités d'un même code additionnées
+- Commande `inventaire` : stock compté par rayon, codes-barres inconnus, produits comptés jamais vendus, vendus jamais comptés, vendus sans code-barres, et fichier du stock compté
+- Commande `compter` : saisie de l'inventaire à la scanette dans le terminal, ligne par ligne
+- Codes-barres fictifs et inventaire fictif dans le générateur, avec leur vérité terrain
+
 ## [0.4.0] - 2026-11-18
 
 ### Ajouté

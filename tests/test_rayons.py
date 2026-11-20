@@ -53,3 +53,43 @@ def test_refuse_un_libelle_sans_rayon():
     table = pd.DataFrame({"libelle": ["Croissant"], "rayon": [None]})
     with pytest.raises(ValueError, match="Croissant"):
         rayons.valider_correspondances(table)
+
+
+def test_lit_une_table_sans_colonne_code_barres(tmp_path):
+    chemin = tmp_path / "correspondances.csv"
+    chemin.write_text("libelle;rayon\nBaguette;Boulangerie\n", encoding="utf-8")
+    table = rayons.lire_correspondances(chemin)
+    assert table["code_barres"].isna().all()
+
+
+def test_garde_les_zeros_en_tete_d_un_code_barres(tmp_path):
+    chemin = tmp_path / "correspondances.csv"
+    chemin.write_text("libelle;rayon;code_barres\nCafé;Épicerie sucrée;0012345678905\n", encoding="utf-8")
+    assert rayons.lire_correspondances(chemin).loc[0, "code_barres"] == "0012345678905"
+
+
+def test_refuse_un_code_barres_invalide():
+    table = pd.DataFrame({"libelle": ["Cola 33cl"], "rayon": ["Boissons"], "code_barres": ["2000000000047"]})
+    with pytest.raises(ValueError, match="2000000000047"):
+        rayons.valider_correspondances(table)
+
+
+def test_refuse_un_code_barres_range_dans_deux_rayons():
+    table = pd.DataFrame({"libelle": ["Cola 33cl", "Chips 150g"], "rayon": ["Boissons", "Épicerie salée"],
+                          "code_barres": ["2000000000046", "2000000000046"]})
+    with pytest.raises(ValueError, match="2000000000046"):
+        rayons.valider_correspondances(table)
+
+
+def test_accepte_un_produit_renomme_et_un_produit_qui_change_de_code():
+    table = pd.DataFrame({"libelle": ["Cola 33cl", "Cola canette 33cl", "Chips 150g", "Chips 150g"],
+                          "rayon": ["Boissons", "Boissons", "Épicerie salée", "Épicerie salée"],
+                          "code_barres": ["2000000000046", "2000000000046", "2000000000411", "2000000000428"]})
+    assert len(rayons.valider_correspondances(table)) == 4
+
+
+def test_un_libelle_a_deux_codes_ne_double_pas_ses_ventes():
+    ventes = pd.DataFrame({"libelle": ["Chips 150g"], "montant_ht": [180]})
+    table = pd.DataFrame({"libelle": ["Chips 150g", "Chips 150g"], "rayon": ["Épicerie salée"] * 2,
+                          "code_barres": ["2000000000411", "2000000000428"]})
+    assert len(rayons.rattacher_rayons(ventes, table)) == 1

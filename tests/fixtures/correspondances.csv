@@ -1,5 +1,5 @@
-libelle;rayon
-Baguette;Boulangerie
-Cola 33cl;Boissons
-Bière blonde 33cl;Alcools
-Chips nature 150g;Épicerie salée
+libelle;rayon;code_barres
+Baguette;Boulangerie;
+Cola 33cl;Boissons;2000000000046
+Bière blonde 33cl;Alcools;2000000000152
+Chips nature 150g;Épicerie salée;2000000000411
