@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from retail_analytics import controles, generateur, indicateurs, nettoyage, rapport, rayons, sumup
+from retail_analytics import controles, generateur, indicateurs, inventaire, nettoyage, rapport, rayons, sumup
 from retail_analytics.affichage import NOMS_MOYENS, date_fr, euros, evolution_fr, mois_fr, nombre, pourcentage
 
 
@@ -170,6 +170,64 @@ def commande_rapport(args):
     print(f"Rapport de {mois_fr(mois)} écrit dans {sortie}")
 
 
+def dernier_inventaire(dossier):
+    """Le fichier d'inventaire le plus récent du dossier : la date dans le nom suffit à les trier."""
+    # glob liste les fichiers dont le nom suit le modèle ; * remplace n'importe quelle suite de caractères.
+    fichiers = sorted(dossier.glob("inventaire-*.csv"))
+    if not fichiers:
+        raise SystemExit(f"Aucun fichier inventaire-AAAA-MM-JJ.csv dans {dossier}")
+    return fichiers[-1]
+
+
+def afficher_stock(rattache, date_inventaire):
+    print(f"Inventaire du {date_fr(date_inventaire)} : {nombre(rattache['quantite_comptee'].sum())} unités, "
+          f"{nombre(len(rattache))} produits.")
+    # dropna=False garde la ligne des codes inconnus, dont le rayon est vide.
+    par_rayon = rattache.groupby("rayon", dropna=False)["quantite_comptee"].agg(["count", "sum"])
+    for rayon, ligne in par_rayon.iterrows():
+        nom = "non rattaché" if pd.isna(rayon) else rayon
+        print(f"  {nom:<22}{nombre(ligne['count']):>5} produit(s){nombre(ligne['sum']):>7} unités")
+
+
+def afficher_liste(titre, lignes, formater):
+    """Un titre avec le nombre de lignes, puis une ligne par élément ; rien si la liste est vide."""
+    if lignes.empty:
+        return
+    print(f"{titre} ({nombre(len(lignes))}) :")
+    for ligne in lignes.itertuples():
+        print(f"  {formater(ligne)}")
+
+
+def commande_inventaire(args):
+    export = Path(args.export)
+    correspondances_chemin = Path(args.correspondances or export.parent / "correspondances.csv")
+    chemin = Path(args.inventaire) if args.inventaire else dernier_inventaire(export.parent)
+    propres, _ = preparer(export, correspondances_chemin)
+    correspondances = rayons.lire_correspondances(correspondances_chemin)
+    lignes = inventaire.lire_inventaire(chemin)
+    date_inventaire = lignes["date_inventaire"].iloc[0]
+    stock = inventaire.stock_compte(lignes)
+    rattache = inventaire.stock_rattache(stock, correspondances)
+    ventes = inventaire.ventes_jusqu_a(propres["ventes"], date_inventaire)
+
+    afficher_stock(rattache, date_inventaire)
+    afficher_liste("Lignes écartées", inventaire.lignes_rejetees(lignes),
+                   lambda l: f"{l.code_barres:<15}{'« ' + l.quantite + ' »':>8}   {l.raison}")
+    afficher_liste("Codes-barres inconnus du référentiel, à y ajouter", inventaire.codes_inconnus(rattache),
+                   lambda l: f"{l.code_barres:<15}{nombre(l.quantite_comptee):>5} unité(s)")
+    afficher_liste("Comptés mais jamais vendus", inventaire.comptes_jamais_vendus(rattache, ventes, correspondances),
+                   lambda l: f"{l.libelle:<32}{l.rayon:<22}{nombre(l.quantite_comptee):>5} unité(s)")
+    afficher_liste("Vendus mais jamais comptés", inventaire.vendus_jamais_comptes(ventes, correspondances, stock),
+                   lambda l: f"{l.libelle:<32}{l.rayon:<22}{euros(l.ca_ht):>13} HT vendus")
+    afficher_liste("Vendus sans code-barres, hors comptage", inventaire.vendus_sans_code_barres(ventes, correspondances),
+                   lambda l: f"{l.libelle:<32}{l.rayon:<22}{euros(l.ca_ht):>13} HT vendus")
+
+    # Le stock va à côté de l'inventaire : celui des données réelles reste dans data/raw/.
+    sortie = chemin.with_name(f"stock-{date_inventaire.date().isoformat()}.csv")
+    rattache.to_csv(sortie, sep=";", index=False, encoding="utf-8")
+    print(f"Stock compté écrit dans {sortie}")
+
+
 def main():
     # argparse lit les arguments de la ligne de commande et génère l'aide (--help).
     parseur = argparse.ArgumentParser(prog="retail_analytics")
@@ -198,6 +256,12 @@ def main():
     produire.add_argument("--mois", help="mois du rapport, au format AAAA-MM (par défaut, le dernier mois complet)")
     produire.add_argument("--sortie", help="fichier produit (par défaut, à côté des exports)")
     produire.set_defaults(fonction=commande_rapport)
+
+    compter_stock = commandes.add_parser("inventaire", help="rapproche un comptage d'inventaire des ventes")
+    compter_stock.add_argument("--export", default="data/fictif/sumup", help="dossier des exports SumUp")
+    compter_stock.add_argument("--correspondances", help="table libellé;rayon;code_barres (par défaut, à côté des exports)")
+    compter_stock.add_argument("--inventaire", help="fichier inventaire-AAAA-MM-JJ.csv (par défaut, le plus récent à côté des exports)")
+    compter_stock.set_defaults(fonction=commande_inventaire)
 
     args = parseur.parse_args()
     args.fonction(args)

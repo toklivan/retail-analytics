@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 
 from retail_analytics import inventaire
+from retail_analytics.__main__ import dernier_inventaire
 from retail_analytics.catalogue import code_barres_fictif
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -121,3 +122,14 @@ def test_garde_les_ventes_jusqu_au_jour_de_l_inventaire_inclus():
     ventes = pd.DataFrame({"journee_commerciale": pd.to_datetime(["2026-03-02", "2026-03-03", "2026-03-04"])})
     gardees = inventaire.ventes_jusqu_a(ventes, pd.Timestamp("2026-03-03"))
     assert list(gardees["journee_commerciale"].dt.day) == [2, 3]
+
+
+def test_prend_l_inventaire_le_plus_recent(tmp_path):
+    for nom in ["inventaire-2026-10-14.csv", "inventaire-2026-03-03.csv", "stock-2026-12-31.csv"]:
+        (tmp_path / nom).write_text("code_barres;quantite\n", encoding="utf-8")
+    assert dernier_inventaire(tmp_path).name == "inventaire-2026-10-14.csv"
+
+
+def test_signale_un_dossier_sans_inventaire(tmp_path):
+    with pytest.raises(SystemExit, match="Aucun fichier inventaire"):
+        dernier_inventaire(tmp_path)

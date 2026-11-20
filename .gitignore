@@ -5,3 +5,4 @@ data/fictif/
 __pycache__/
 .pytest_cache/
 ventes_propres.csv
+stock-*.csv
